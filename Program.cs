@@ -1,13 +1,15 @@
-﻿Day03_Part2();
+﻿using static System.Diagnostics.Debug;
+
+Setup();
+
+Day03_Part2();
 
 #pragma warning disable CS8321
 
 void Day03_Part2()
 {
     // string[]
-    var lines = File.ReadAllText("Day03.txt")
-        .Split("\n", options: StringSplitOptions.RemoveEmptyEntries)
-        .ToArray();
+    var lines = GetInputLines(3);
 
     // byte[lines.Length][12];
     var values = lines
@@ -23,7 +25,7 @@ void Day03_Part2()
     i = Reduce(false);
     var co2 = Convert.ToInt32(lines[i], 2);
 
-    Console.WriteLine(oxygen * co2);
+    WriteLine(oxygen * co2);
 
     int Reduce(bool majority)
     {
@@ -43,7 +45,7 @@ void Day03_Part2()
                 eligibles = eligibles.Where(e => values[e][i] == (majority ? 0 : 1)).ToList();
         }
 
-        System.Diagnostics.Debug.Assert(eligibles.Count == 1, eligibles.Count.ToString());
+        Assert(eligibles.Count == 1, eligibles.Count.ToString());
 
         return eligibles.First();
     }
@@ -51,9 +53,7 @@ void Day03_Part2()
 
 void Day03()
 {
-    var lines = File.ReadAllText("Day03.txt")
-        .Split("\n", options: StringSplitOptions.RemoveEmptyEntries)
-        .ToArray();
+    var lines = GetInputLines(3);
 
     var setBits = new int[12];
 
@@ -76,14 +76,12 @@ void Day03()
             epsilonRate |= 1 << (setBits.Length - i - 1);
     }
 
-    Console.WriteLine($"Gamma Rate = {gammaRate} ; Epsilon Rate = {epsilonRate} ; Answer = {gammaRate * epsilonRate}");
+    WriteLine($"Gamma Rate = {gammaRate} ; Epsilon Rate = {epsilonRate} ; Answer = {gammaRate * epsilonRate}");
 }
 
 void Day02()
 {
-    var lines = File.ReadAllText("Day02.txt")
-        .Split("\n", options: StringSplitOptions.RemoveEmptyEntries)
-        .ToArray();
+    var lines = GetInputLines(2);
 
     (int horizontal, int depth, int aim) position = (0, 0, 0);
 
@@ -102,13 +100,12 @@ void Day02()
         };
     }
 
-    Console.WriteLine(position.horizontal * position.depth);
+    WriteLine(position.horizontal * position.depth);
 }
 
 void Day01()
 {
-    var lines = File.ReadAllText("Day01.txt")
-        .Split("\n", options: StringSplitOptions.RemoveEmptyEntries)
+    var lines = GetInputLines(1)
         .Select(l => int.Parse(l.Trim()))
         .ToArray();
 
@@ -119,5 +116,39 @@ void Day01()
         if (lines[i] > lines[i - 1]) increasing++;
     }
 
-    Console.WriteLine(increasing);
+    WriteLine(increasing);
+}
+
+void Setup()
+{
+    System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener()); // redirects Debug.WriteLine() to the console
+}
+
+string[] GetInputLines(int day)
+    => GetInputFile(day).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).ToArray();
+
+string GetInputFile(int day)
+{
+    var filename = $"Day{day:00}.txt";
+    if (File.Exists(filename))
+    {
+        return File.ReadAllText(filename);
+    }
+
+    var sessionId = Environment.GetEnvironmentVariable("AOC_SESSION");
+    if (string.IsNullOrEmpty(sessionId))
+        // pwsh: $env:AOC_SESSION = "..."
+        throw new InvalidOperationException($"You must set AOC_SESSION environment variable with your AoC session cookie value");
+
+    var cookieContainer = new System.Net.CookieContainer();
+    cookieContainer.Add(new System.Net.Cookie("session", sessionId, "/", ".adventofcode.com"));
+
+    using var handler = new HttpClientHandler() { CookieContainer = cookieContainer };
+    using var client = new HttpClient(handler);
+
+    var text = client.GetStringAsync($"https://adventofcode.com/2021/day/{day}/input").Result;
+
+    File.WriteAllText(filename, text);
+
+    return text;
 }
