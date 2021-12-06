@@ -2,15 +2,38 @@
 
 Setup();
 
-Day06();
+Day06_Part2();
 
 #pragma warning disable CS8321
+
+void Day06_Part2()
+{
+    var fishes = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+
+    var timers = Enumerable.Repeat<long>(0, 10).ToList();
+    
+    foreach(var fish in fishes)
+        timers[fish]++;
+
+    for (int i = 0; i < 256; i++)
+    {
+        var day = timers[0];
+        timers.RemoveAt(0);
+
+        while(timers.Count < 9) timers.Add(0);
+
+        timers[6] += day;
+        timers[8] += day;
+    }
+
+    WriteLine(timers.Sum());
+}
 
 void Day06()
 {
     var fishs = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
 
-    for (int i = 0; i < 256; i++)
+    for (int i = 0; i < 80; i++)
     {
         var size = fishs.Count;
         for (var j = 0; j < size; j++)
