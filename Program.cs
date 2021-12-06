@@ -2,9 +2,34 @@
 
 Setup();
 
-Day05_Part2();
+Day06();
 
 #pragma warning disable CS8321
+
+void Day06()
+{
+    var fishs = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+
+    for (int i = 0; i < 256; i++)
+    {
+        var size = fishs.Count;
+        for (var j = 0; j < size; j++)
+        {
+            var timer = fishs[j];
+            if (timer == 0)
+            {
+                fishs[j] = 6;
+                fishs.Add(8);
+            }
+            else
+            {
+                fishs[j] = timer - 1;
+            }
+        }
+    }
+
+    WriteLine(fishs.Count);
+}
 
 void Day05_Part2()
 {
