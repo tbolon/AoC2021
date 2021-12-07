@@ -2,9 +2,31 @@
 
 Setup();
 
-Day06_Part2();
+Day07();
 
 #pragma warning disable CS8321
+
+void Day07()
+{
+    var crabs = GetInputLines(7).First().Split(',').Select(x => int.Parse(x)).ToList();
+    crabs.Sort();
+
+    var median = crabs[crabs.Count / 2];
+
+    var selectedX = -1;
+    var selectedDist = int.MaxValue;
+    for(var x = median - 1; x <= median + 1; x++)
+    {
+        var dist = crabs.Select(value => Math.Abs(value - x)).Sum();
+        if(dist < selectedDist)
+        {
+            selectedX = x;
+            selectedDist = dist;
+        }
+    }
+
+    WriteLine($"{crabs.Count} {median} {selectedX} {selectedDist}");
+}
 
 void Day06_Part2()
 {
