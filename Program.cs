@@ -2,9 +2,48 @@
 
 Setup();
 
-Day07();
+Day07_Part2();
 
 #pragma warning disable CS8321
+
+void Day07_Part2()
+{
+    var crabs = GetInputLines(7).First().Split(',').Select(x => int.Parse(x)).ToList();
+    crabs.Sort();
+
+    var median = crabs[crabs.Count / 2];
+
+    var x = median;
+    var fuel = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - x)).Sum()).Sum();
+
+    WriteLine($"{x} = {fuel}");
+
+    var fuelPositive = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - (x + 1))).Sum()).Sum();
+    var fuelNegative = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - (x - 1))).Sum()).Sum();
+
+    WriteLine($"{x + 1} = {fuelPositive}");
+    WriteLine($"{x - 1} = {fuelNegative}");
+
+    var increment = fuelPositive > fuelNegative ? -1 : 1;
+
+    WriteLine(increment);
+
+    while (true)
+    {
+        var newX = x + increment;
+        var newFuel = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - newX)).Sum()).Sum();
+
+        if (newFuel > fuel)
+        {
+            WriteLine($"{x} {fuel}");
+            return;
+        }
+
+        x = newX;
+        fuel = newFuel;
+    }
+
+}
 
 void Day07()
 {
@@ -15,10 +54,10 @@ void Day07()
 
     var selectedX = -1;
     var selectedDist = int.MaxValue;
-    for(var x = median - 1; x <= median + 1; x++)
+    for (var x = median - 1; x <= median + 1; x++)
     {
         var dist = crabs.Select(value => Math.Abs(value - x)).Sum();
-        if(dist < selectedDist)
+        if (dist < selectedDist)
         {
             selectedX = x;
             selectedDist = dist;
@@ -33,8 +72,8 @@ void Day06_Part2()
     var fishes = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
 
     var timers = Enumerable.Repeat<long>(0, 10).ToList();
-    
-    foreach(var fish in fishes)
+
+    foreach (var fish in fishes)
         timers[fish]++;
 
     for (int i = 0; i < 256; i++)
@@ -42,7 +81,7 @@ void Day06_Part2()
         var day = timers[0];
         timers.RemoveAt(0);
 
-        while(timers.Count < 9) timers.Add(0);
+        while (timers.Count < 9) timers.Add(0);
 
         timers[6] += day;
         timers[8] += day;
