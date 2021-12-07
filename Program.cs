@@ -3,39 +3,29 @@
 Setup();
 
 Day07();
+//Day07_Part2();
 
 #pragma warning disable CS8321
 
 void Day07_Part2()
 {
-    var crabs = GetInputLines(7).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var crabs = GetInputLines(7).First().Split(',').Select(int.Parse).ToList();
     crabs.Sort();
 
     var median = crabs[crabs.Count / 2];
 
     var x = median;
-    var fuel = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - x)).Sum()).Sum();
-
-    WriteLine($"{x} = {fuel}");
-
-    var fuelPositive = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - (x + 1))).Sum()).Sum();
-    var fuelNegative = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - (x - 1))).Sum()).Sum();
-
-    WriteLine($"{x + 1} = {fuelPositive}");
-    WriteLine($"{x - 1} = {fuelNegative}");
-
-    var increment = fuelPositive > fuelNegative ? -1 : 1;
-
-    WriteLine(increment);
+    var fuel = GetFuel(crabs, x);
+    var increment = fuel < GetFuel(crabs, x + 1) ? -1 : 1;
 
     while (true)
     {
         var newX = x + increment;
-        var newFuel = crabs.Select(v => Enumerable.Range(1, Math.Abs(v - newX)).Sum()).Sum();
+        var newFuel = GetFuel(crabs, newX);
 
         if (newFuel > fuel)
         {
-            WriteLine($"{x} {fuel}");
+            WriteLine($"{x} => {fuel}");
             return;
         }
 
@@ -43,17 +33,18 @@ void Day07_Part2()
         fuel = newFuel;
     }
 
+    int GetFuel(IEnumerable<int> list, int index) => list.Sum(val => Enumerable.Range(1, Math.Abs(val - index)).Sum());
 }
 
 void Day07()
 {
-    var crabs = GetInputLines(7).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var crabs = GetInputLines(7).First().Split(',').Select(int.Parse).ToList();
     crabs.Sort();
 
     var median = crabs[crabs.Count / 2];
-    var dist = crabs.Select(value => Math.Abs(value - median)).Sum();
+    var dist = crabs.Sum(x => Math.Abs(x - median));
 
-    WriteLine(dist);
+    WriteLine($"{median} => {dist}");
 }
 
 void Day06_Part2()
