@@ -2,8 +2,7 @@
 
 Setup();
 
-Day07();
-//Day07_Part2();
+Day07_Part2();
 
 #pragma warning disable CS8321
 
