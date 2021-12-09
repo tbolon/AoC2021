@@ -2,9 +2,82 @@
 
 Setup();
 
-Day08_Part2();
+Day09();
 
 #pragma warning disable CS8321
+
+void Day09_Part2()
+{
+    var lines = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+
+    var score = 0;
+
+    for (int x = 0; x < lines.Length; x++)
+    {
+        var line = lines[x];
+
+        for (int y = 0; y < line.Length; y++)
+        {
+            var current = line[y];
+            var lowest = true;
+
+            if (x > 0 && lines[x - 1][y] <= current)
+                lowest = false;
+            if (x < lines.Length - 1 && lines[x + 1][y] <= current)
+                lowest = false;
+            if (y > 0 && line[y - 1] <= current)
+                lowest = false;
+            if (y < line.Length - 1 && line[y + 1] <= current)
+                lowest = false;
+
+            if (lowest)
+            {
+                WriteLine($"({x},{y}) = {current}");
+                score += current + 1;
+            }
+
+        }
+    }
+
+    WriteLine(score);
+}
+
+void Day09()
+{
+    var lines = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+
+    var score = 0;
+
+    for (int x = 0; x < lines.Length; x++)
+    {
+        var line = lines[x];
+
+        for (int y = 0; y < line.Length; y++)
+        {
+            var current = line[y];
+            var lowest = true;
+
+            if (x > 0 && lines[x - 1][y] <= current)
+                lowest = false;
+            if (x < lines.Length - 1 && lines[x + 1][y] <= current)
+                lowest = false;
+            if (y > 0 && line[y - 1] <= current)
+                lowest = false;
+            if (y < line.Length - 1 && line[y + 1] <= current)
+                lowest = false;
+
+            if (lowest)
+            {
+                WriteLine($"({x},{y}) = {current}");
+                score += current + 1;
+            }
+
+        }
+    }
+
+    WriteLine(score);
+
+}
 
 
 void Day08_Part2()
@@ -644,7 +717,7 @@ void Setup()
 }
 
 string[] GetInputLines(int day, bool sample = false)
-    => GetInputFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).ToArray();
+    => GetInputFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
 
 string GetInputFile(int day, bool sample = false)
 {
