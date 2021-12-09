@@ -8,64 +8,58 @@ Day09_Part2();
 
 void Day09_Part2()
 {
-    var lines = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+    byte[][] data = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+    int height = data.Length, width = data[0].Length;
 
-    // détection bassins
+    // détection bassins ; x = vertical ; y = horizontal
     List<(int x, int y)> points = new();
-    int height = lines.Length, width = lines[0].Length;
     for (int x = 0; x < height; x++)
     {
-        var line = lines[x];
-
+        var line = data[x];
         for (int y = 0; y < width; y++)
         {
-            var current = line[y];
-            var lowest = true;
+            var depth = line[y];
 
-            if (x > 0 && lines[x - 1][y] <= current)
-                lowest = false;
-            if (x < lines.Length - 1 && lines[x + 1][y] <= current)
-                lowest = false;
-            if (y > 0 && line[y - 1] <= current)
-                lowest = false;
-            if (y < line.Length - 1 && line[y + 1] <= current)
-                lowest = false;
+            // détermine si le point est < à tous les voisins
+            var lowest = (x <= 0 || data[x - 1][y] > depth)
+                && (x >= height - 1 || data[x + 1][y] > depth) 
+                && (y <= 0 || line[y - 1] > depth)
+                && (y >= width - 1 || line[y + 1] > depth);
 
             if (lowest)
             {
-                WriteLine($"({x},{y}) = {current}");
+                WriteLine($"({x},{y}) = {depth}");
                 points.Add((x, y));
             }
         }
     }
 
     // grille avec un 0 pour les zones vides, 1 pour les zones déjà découvertes d'un bassin, 0xff pour les bords (hauteur 9)
-    var fill = lines.Select(l => l.Select(c => (byte)(c == 9 ? 0xff : 0)).ToArray()).ToArray();
+    byte[][] fill = data.Select(l => l.Select(c => (byte)(c == 9 ? 0xff : 0)).ToArray()).ToArray();
 
-    // examen.
-    var sizes = new int[points.Count];
+    // examen du bassin
+    int[] sizes = new int[points.Count];
     for (int i = 0; i < points.Count; i++)
     {
-        (int x, int y) = points[i];
-
-        sizes[i] = Visit(fill, x, y);
+        sizes[i] = Visit(fill, points[i]);
     }
 
     // calcul du produit des 3 plus grandes
     WriteLine(sizes.OrderByDescending(s => s).Take(3).Aggregate(1, (agg, current) => agg * current));
 
     // examine une case et démarre l'examen de ses voisines
-    int Visit(byte[][] fill, int x, int y)
+    int Visit(byte[][] fill, (int x, int y) point)
     {
+        int x = point.x, y = point.y;
         if (x >= fill.Length || x < 0 || y >= fill[x].Length || y < 0)
-            return 0;
+            return 0; // out of bounds
 
         if (fill[x][y] != 0)
-            return 0;
+            return 0; // invalid
 
         fill[x][y] = 1; // marquée comme visitée
 
-        return 1 + Visit(fill, x - 1, y) + Visit(fill, x + 1, y) + Visit(fill, x, y - 1) + Visit(fill, x, y + 1);
+        return 1 + Visit(fill, (x - 1, y)) + Visit(fill, (x + 1, y)) + Visit(fill, (x, y - 1)) + Visit(fill, (x, y + 1));
     }
 }
 
@@ -103,9 +97,7 @@ void Day09()
     }
 
     WriteLine(score);
-
 }
-
 
 void Day08_Part2()
 {
@@ -219,7 +211,7 @@ void Day08_Part2()
         for (int i = 0; i < swaps.Length; i++)
         {
             var c = chars[i];
-            if (swaps.Count(s => s == c) != 0) continue; // on ignore les digits déjà trouvés
+            if (swaps.Any(s => s == c)) continue; // on ignore les digits déjà trouvés
 
             if (line.digits[digitIndexes[4]].Contains(c) && !line.digits[digitIndexes[7]].Contains(c))
             {
