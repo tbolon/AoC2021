@@ -2,7 +2,7 @@
 
 Setup();
 
-Day09();
+Day09_Part2();
 
 #pragma warning disable CS8321
 
@@ -10,13 +10,14 @@ void Day09_Part2()
 {
     var lines = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
 
-    var score = 0;
-
-    for (int x = 0; x < lines.Length; x++)
+    // détection bassins
+    List<(int x, int y)> points = new();
+    int height = lines.Length, width = lines[0].Length;
+    for (int x = 0; x < height; x++)
     {
         var line = lines[x];
 
-        for (int y = 0; y < line.Length; y++)
+        for (int y = 0; y < width; y++)
         {
             var current = line[y];
             var lowest = true;
@@ -33,13 +34,39 @@ void Day09_Part2()
             if (lowest)
             {
                 WriteLine($"({x},{y}) = {current}");
-                score += current + 1;
+                points.Add((x, y));
             }
-
         }
     }
 
-    WriteLine(score);
+    // grille avec un 0 pour les zones vides, 1 pour les zones déjà découvertes d'un bassin, 0xff pour les bords (hauteur 9)
+    var fill = lines.Select(l => l.Select(c => (byte)(c == 9 ? 0xff : 0)).ToArray()).ToArray();
+
+    // examen.
+    var sizes = new int[points.Count];
+    for (int i = 0; i < points.Count; i++)
+    {
+        (int x, int y) = points[i];
+
+        sizes[i] = Visit(fill, x, y);
+    }
+
+    // calcul du produit des 3 plus grandes
+    WriteLine(sizes.OrderByDescending(s => s).Take(3).Aggregate(1, (agg, current) => agg * current));
+
+    // examine une case et démarre l'examen de ses voisines
+    int Visit(byte[][] fill, int x, int y)
+    {
+        if (x >= fill.Length || x < 0 || y >= fill[x].Length || y < 0)
+            return 0;
+
+        if (fill[x][y] != 0)
+            return 0;
+
+        fill[x][y] = 1; // marquée comme visitée
+
+        return 1 + Visit(fill, x - 1, y) + Visit(fill, x + 1, y) + Visit(fill, x, y - 1) + Visit(fill, x, y + 1);
+    }
 }
 
 void Day09()
