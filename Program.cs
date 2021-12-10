@@ -9,11 +9,11 @@ Day10_Part2();
 void Day10_Part2()
 {
     var pairs = new char[128];
-    pairs['('] = 'x';
+    pairs['('] = 'x'; // opening => x
     pairs['['] = 'x';
     pairs['{'] = 'x';
     pairs['<'] = 'x';
-    pairs[')'] = '(';
+    pairs[')'] = '('; // closing => opening
     pairs[']'] = '[';
     pairs['}'] = '{';
     pairs['>'] = '<';
@@ -53,12 +53,14 @@ void Day10_Part2()
 
         foreach (var c in line)
         {
+            // detect opening
             if (pairs[c] == 'x')
             {
                 stack.Push(c);
                 continue;
             }
-
+            
+            // detect invalid (part1)
             var c2 = stack.Pop();
             if (pairs[c] != c2)
             {
@@ -66,7 +68,7 @@ void Day10_Part2()
             }
         }
 
-        // non closed characters
+        // non closed characters: compute score (part2)
         foreach (var c in stack)
         {
             score = score * 5 + scoreTable[c];
