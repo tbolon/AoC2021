@@ -2,9 +2,126 @@
 
 Setup();
 
-Day09_Part2();
+Day10_Part2();
 
 #pragma warning disable CS8321
+
+void Day10_Part2()
+{
+    var lines = GetInputLines(10, false);
+
+    Dictionary<char, int> count = new();
+    List<long> scores = new();
+
+    foreach (var line in lines)
+    {
+
+        var c = ExamLine(line, out var score);
+        if (c == '\0')
+        {
+            // incomplete
+            scores.Add(score);
+        }
+        else
+        {
+            // invalid
+            count[c] = (count.TryGetValue(c, out var ccount) ? ccount : 0);
+        }
+    }
+
+    WriteLine(scores.OrderBy(s => s).ElementAt(scores.Count / 2));
+
+    char ExamLine(string line, out long score)
+    {
+        score = 0;
+        var stack = new Stack<char>();
+
+        foreach (var c in line)
+        {
+            if (c == '(' || c == '[' || c == '{' || c == '<')
+            {
+                stack.Push(c);
+                continue;
+            }
+
+            var c2 = stack.Peek();
+
+            if (c == ')' && c2 != '(')
+                return c;
+            else if (c == ']' && c2 != '[')
+                return c;
+            else if (c == '}' && c2 != '{')
+                return c;
+            else if (c == '>' && c2 != '<')
+                return c;
+
+            stack.Pop();
+        }
+
+        // non closed characters
+        foreach (var c in stack)
+        {
+            score *= 5;
+            switch (c)
+            {
+                case '(': score += 1; break;
+                case '[': score += 2; break;
+                case '{': score += 3; break;
+                case '<': score += 4; break;
+            }
+        }
+
+        return '\0';
+    }
+}
+
+void Day10()
+{
+    var lines = GetInputLines(10, false);
+
+    Dictionary<char, int> count = new();
+
+    foreach (var line in lines)
+    {
+        var c = ExamLine(line);
+        if (c != '\0')
+        {
+            // invalid
+            count[c] = (count.TryGetValue(c, out var ccount) ? ccount : 0) + 1;
+        }
+    }
+
+    WriteLine(count[')'] * 3 + count[']'] * 57 + count['}'] * 1197 + count['>'] * 25137);
+
+    char ExamLine(string line)
+    {
+        var stack = new Stack<char>();
+
+        foreach (var c in line)
+        {
+            if (c == '(' || c == '[' || c == '{' || c == '<')
+            {
+                stack.Push(c);
+                continue;
+            }
+
+            var c2 = stack.Peek();
+
+            if (c == ')' && c2 != '(')
+                return c;
+            else if (c == ']' && c2 != '[')
+                return c;
+            else if (c == '}' && c2 != '{')
+                return c;
+            else if (c == '>' && c2 != '<')
+                return c;
+
+            stack.Pop();
+        }
+
+        return '\0';
+    }
+}
 
 void Day09_Part2()
 {
@@ -22,7 +139,7 @@ void Day09_Part2()
 
             // détermine si le point est < à tous les voisins
             var lowest = (x <= 0 || data[x - 1][y] > depth)
-                && (x >= height - 1 || data[x + 1][y] > depth) 
+                && (x >= height - 1 || data[x + 1][y] > depth)
                 && (y <= 0 || line[y - 1] > depth)
                 && (y >= width - 1 || line[y + 1] > depth);
 
