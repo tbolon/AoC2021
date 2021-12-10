@@ -8,10 +8,26 @@ Day10_Part2();
 
 void Day10_Part2()
 {
-    var lines = GetInputLines(10, false);
+    var pairs = new char[128];
+    pairs['('] = 'x';
+    pairs['['] = 'x';
+    pairs['{'] = 'x';
+    pairs['<'] = 'x';
+    pairs[')'] = '(';
+    pairs[']'] = '[';
+    pairs['}'] = '{';
+    pairs['>'] = '<';
+
+    var scoreTable = new byte[128];
+    scoreTable['('] = 1;
+    scoreTable['['] = 2;
+    scoreTable['{'] = 3;
+    scoreTable['<'] = 4;
 
     Dictionary<char, int> count = new();
     List<long> scores = new();
+
+    var lines = GetInputLines(10, false);
 
     foreach (var line in lines)
     {
@@ -23,8 +39,8 @@ void Day10_Part2()
         }
         else
         {
-            // invalid
-            count[c] = (count.TryGetValue(c, out var ccount) ? ccount : 0);
+            // invalid (part1)
+            count[c] = count.TryGetValue(c, out var ccount) ? ccount : 0;
         }
     }
 
@@ -37,37 +53,23 @@ void Day10_Part2()
 
         foreach (var c in line)
         {
-            if (c == '(' || c == '[' || c == '{' || c == '<')
+            if (pairs[c] == 'x')
             {
                 stack.Push(c);
                 continue;
             }
 
-            var c2 = stack.Peek();
-
-            if (c == ')' && c2 != '(')
+            var c2 = stack.Pop();
+            if (pairs[c] != c2)
+            {
                 return c;
-            else if (c == ']' && c2 != '[')
-                return c;
-            else if (c == '}' && c2 != '{')
-                return c;
-            else if (c == '>' && c2 != '<')
-                return c;
-
-            stack.Pop();
+            }
         }
 
         // non closed characters
         foreach (var c in stack)
         {
-            score *= 5;
-            switch (c)
-            {
-                case '(': score += 1; break;
-                case '[': score += 2; break;
-                case '{': score += 3; break;
-                case '<': score += 4; break;
-            }
+            score = score * 5 + scoreTable[c];
         }
 
         return '\0';
