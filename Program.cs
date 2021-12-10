@@ -15,7 +15,6 @@ void Day10_Part2()
 
     foreach (var line in lines)
     {
-
         var c = ExamLine(line, out var score);
         if (c == '\0')
         {
