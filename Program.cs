@@ -1273,11 +1273,11 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
         }
     }
 
-    public bool Contains(Point p)
-    {
-        return p.X >= 0 && p.X <= XMax && p.Y >= 0 && p.Y <= YMax;
-    }
+    public bool Contains(Point p) => p.X >= 0 && p.X <= XMax && p.Y >= 0 && p.Y <= YMax;
 
+    /// <summary>
+    /// Effectue une copie de cette grille, en transformant chaque élément.
+    /// </summary>
     public Grid<T2> Copy<T2>(Func<Point, T, T2> transform) where T2 : struct
     {
         var result = new Grid<T2>(Width, Height);
