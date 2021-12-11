@@ -283,8 +283,6 @@ void Day10()
 void Day09_Part2()
 {
     var grid = Input.GetLines(9, sample: false).AsGridOfBytes(byte.MaxValue);
-    byte[][] data = Input.GetLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
-    int height = data.Length, width = data[0].Length;
 
     // détection bassins
     List<Point> points = new();
@@ -327,7 +325,10 @@ void Day09()
 
     var score = grid.Aggregate<int>((point, cumul, value) =>
     {
-        if (grid[point.Right] > value && grid[point.Left] > value && grid[point.Up] > value && grid[point.Down] > value)
+        if (grid[point.Right] > value
+            && grid[point.Left] > value
+            && grid[point.Up] > value
+            && grid[point.Down] > value)
         {
             return cumul + value + 1;
         }
