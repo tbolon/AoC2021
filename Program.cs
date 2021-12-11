@@ -8,9 +8,7 @@ Day11_Part2();
 
 void Day11_Part2()
 {
-    string[] lines = GetInputLines(11, sample: false);
-    byte[][] octopuses = lines
-        .Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
+    byte[][] octopuses = GetInputLines(11, sample: false).Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
     var height = octopuses.Length;
     var width = octopuses[0].Length;
     var flashes = 0;
@@ -28,7 +26,7 @@ void Day11_Part2()
         {
             for (int x = 0; x < width; x++)
             {
-                ReceiveFlash(x, y);
+                IncreaseEnergy(x, y);
             }
         }
 
@@ -72,7 +70,7 @@ void Day11_Part2()
         WriteLine(step);
     }
 
-    void ReceiveFlash(int x, int y)
+    void IncreaseEnergy(int x, int y)
     {
         if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return;
         var value = octopuses[x][y];
@@ -88,28 +86,27 @@ void Day11_Part2()
             stepFlashes++;
             flashes++;
 
-            ReceiveFlash(x + 1, y);
-            ReceiveFlash(x - 1, y);
-            ReceiveFlash(x + 1, y + 1);
-            ReceiveFlash(x - 1, y - 1);
-            ReceiveFlash(x + 1, y - 1);
-            ReceiveFlash(x - 1, y + 1);
-            ReceiveFlash(x, y - 1);
-            ReceiveFlash(x, y + 1);
+            // release energy
+            IncreaseEnergy(x + 1, y);
+            IncreaseEnergy(x - 1, y);
+            IncreaseEnergy(x + 1, y + 1);
+            IncreaseEnergy(x - 1, y - 1);
+            IncreaseEnergy(x + 1, y - 1);
+            IncreaseEnergy(x - 1, y + 1);
+            IncreaseEnergy(x, y - 1);
+            IncreaseEnergy(x, y + 1);
         }
         else
         {
+            // increase energy
             octopuses[x][y]++;
         }
     }
 }
 
-
 void Day11()
 {
-    string[] lines = GetInputLines(11, sample: false);
-    byte[][] octopuses = lines
-        .Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
+    byte[][] octopuses = GetInputLines(11, sample: false).Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
     var height = octopuses.Length;
     var width = octopuses[0].Length;
     var flashes = 0;
@@ -124,7 +121,7 @@ void Day11()
         {
             for (int x = 0; x < width; x++)
             {
-                ReceiveFlash(x, y);
+                IncreaseEnergy(x, y);
             }
         }
 
@@ -141,7 +138,7 @@ void Day11()
 
     WriteLine(flashes);
 
-    void ReceiveFlash(int x, int y)
+    void IncreaseEnergy(int x, int y)
     {
         if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return;
         var value = octopuses[x][y];
@@ -157,17 +154,19 @@ void Day11()
             stepFlashes++;
             flashes++;
 
-            ReceiveFlash(x + 1, y);
-            ReceiveFlash(x - 1, y);
-            ReceiveFlash(x + 1, y + 1);
-            ReceiveFlash(x - 1, y - 1);
-            ReceiveFlash(x + 1, y - 1);
-            ReceiveFlash(x - 1, y + 1);
-            ReceiveFlash(x, y - 1);
-            ReceiveFlash(x, y + 1);
+            // release energy
+            IncreaseEnergy(x + 1, y);
+            IncreaseEnergy(x - 1, y);
+            IncreaseEnergy(x + 1, y + 1);
+            IncreaseEnergy(x - 1, y - 1);
+            IncreaseEnergy(x + 1, y - 1);
+            IncreaseEnergy(x - 1, y + 1);
+            IncreaseEnergy(x, y - 1);
+            IncreaseEnergy(x, y + 1);
         }
         else
         {
+            // increase energy
             octopuses[x][y]++;
         }
     }
