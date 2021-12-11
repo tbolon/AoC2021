@@ -1,7 +1,5 @@
 ﻿using static ProgramHelper;
 
-Setup();
-
 Day11_Part2();
 
 #pragma warning disable CS8321
@@ -1006,68 +1004,12 @@ void Day01()
     WriteLine(increasing);
 }
 
-void Setup()
-{
-    System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener()); // redirects Debug.WriteLine() to the console
-}
-
-static class Extensions
-{
-    public static int IndexOf<T>(this T[] array, T value)
-    {
-        for (int i = 0; i < array.Length; i++)
-        {
-            if (Equals(array[i], value))
-                return i;
-        }
-
-        return -1;
-    }
-
-    public static Grid<char> AsGridOfChars(this string[] lines, char? outOfBoundsValue = default)
-        => new(lines, outOfBoundsValue);
-
-    public static Grid<byte> AsGridOfBytes(this string[] lines, byte? outOfBoundsValue = default)
-        => AsGrid(lines, l => l.Select(c => (byte)(c - '0')), outOfBoundsValue);
-
-    public static Grid<T> AsGrid<T>(this string[] lines, Func<string, IEnumerable<T>> transform, T? outOfBoundsValue = default) where T : struct
-        => new(lines.Select(l => transform(l)), outOfBoundsValue);
-
-    public static IEnumerable<char> AsChars(this string @this) => @this;
-}
-
-static class ProgramHelper
-{
-    public static void Assert(bool condition) => System.Diagnostics.Debug.Assert(condition);
-    public static void Assert(bool condition, string? message) => System.Diagnostics.Debug.Assert(condition, message);
-    public static void ReadKey(bool intercept = true) => Console.ReadKey(intercept);
-    public static void SetCursorPosition(int left, int top) => Console.SetCursorPosition(left, top);
-    public static void WriteLine(object value, ConsoleColor? color = null) => WriteLine(value?.ToString(), color);
-    public static void WriteLine(string? message, ConsoleColor? color = null) => Console.Write(message + Environment.NewLine, color);
-    public static void WriteLine() => Console.Write(Environment.NewLine);
-    public static void Write(object value, ConsoleColor? color = null) => Write(value?.ToString(), color);
-    public static void Write(string? message, ConsoleColor? color = null)
-    {
-        ConsoleColor? previousColor = null;
-        if (color != null)
-        {
-            previousColor = Console.ForegroundColor;
-            Console.ForegroundColor = color.Value;
-        }
-
-        Console.Write(message);
-
-        if (previousColor != null)
-        {
-            Console.ForegroundColor = previousColor.Value;
-        }
-    }
-}
-
+/// <summary>
+/// Helper for puzzle input.
+/// </summary>
 static class Input
 {
-    public static string[] GetLines(int day, bool sample = false)
-        => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
+    public static string[] GetLines(int day, bool sample = false) => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
 
     public static string GetFile(int day, bool sample = false)
     {
@@ -1108,7 +1050,59 @@ static class Input
     }
 }
 
-/// <summary>Represents a point in a space where X move from left to right and Y move from top to bottom.</summary>
+static class ProgramHelper
+{
+    public static void Assert(bool condition) => System.Diagnostics.Debug.Assert(condition);
+    public static void Assert(bool condition, string? message) => System.Diagnostics.Debug.Assert(condition, message);
+    public static void ReadKey(bool intercept = true) => Console.ReadKey(intercept);
+    public static void SetCursorPosition(int left, int top) => Console.SetCursorPosition(left, top);
+    public static void WriteLine(object value, ConsoleColor? color = null) => WriteLine(value?.ToString(), color);
+    public static void WriteLine(string? message, ConsoleColor? color = null) => Console.Write(message + Environment.NewLine, color);
+    public static void WriteLine() => Console.Write(Environment.NewLine);
+    public static void Write(object value, ConsoleColor? color = null) => Write(value?.ToString(), color);
+    public static void Write(string? message, ConsoleColor? color = null)
+    {
+        ConsoleColor? previousColor = null;
+        if (color != null)
+        {
+            previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = color.Value;
+        }
+
+        Console.Write(message);
+
+        if (previousColor != null)
+        {
+            Console.ForegroundColor = previousColor.Value;
+        }
+    }
+}
+
+static class Extensions
+{
+    public static int IndexOf<T>(this T[] array, T value)
+    {
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (Equals(array[i], value))
+                return i;
+        }
+
+        return -1;
+    }
+
+    public static Grid<char> AsGridOfChars(this string[] lines, char? outOfBoundsValue = default) => new(lines, outOfBoundsValue);
+
+    public static Grid<byte> AsGridOfBytes(this string[] lines, byte? outOfBoundsValue = default) => AsGrid(lines, l => l.Select(c => (byte)(c - '0')), outOfBoundsValue);
+
+    public static Grid<T> AsGrid<T>(this string[] lines, Func<string, IEnumerable<T>> transform, T? outOfBoundsValue = default) where T : struct => new(lines.Select(l => transform(l)), outOfBoundsValue);
+
+    public static IEnumerable<char> AsChars(this string @this) => @this;
+}
+
+/// <summary>
+/// Represents a point in a space where X move from left to right and Y move from top to bottom.
+/// </summary>
 readonly struct Point
 {
     public static readonly Point Empty = new(0, 0);
