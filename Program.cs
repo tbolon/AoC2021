@@ -1,6 +1,6 @@
 ﻿using static ProgramHelper;
 
-Day11_Part2();
+Day09_Part2();
 
 #pragma warning disable CS8321
 
@@ -52,7 +52,7 @@ void Day11_Part2()
             else Write(v);
         });
 
-        WriteLine("");
+        WriteLine();
         WriteLine(step);
     }
 
@@ -319,6 +319,7 @@ void Day09_Part2()
     }
 
     // calcul du produit des 3 plus grandes
+    // 1045660
     WriteLine(sizes.OrderByDescending(s => s).Take(3).Aggregate(1, (agg, current) => agg * current));
 
     // examine une case et démarre l'examen de ses voisines
@@ -339,36 +340,17 @@ void Day09_Part2()
 
 void Day09()
 {
-    var lines = Input.GetLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+    var grid = Input.GetLines(9, sample: false).AsGridOfBytes(byte.MaxValue);
 
-    var score = 0;
-
-    for (int x = 0; x < lines.Length; x++)
+    var score = grid.Aggregate<int>((point, cumul, value) =>
     {
-        var line = lines[x];
-
-        for (int y = 0; y < line.Length; y++)
+        if (grid[point.Right] > value && grid[point.Left] > value && grid[point.Up] > value && grid[point.Down] > value)
         {
-            var current = line[y];
-            var lowest = true;
-
-            if (x > 0 && lines[x - 1][y] <= current)
-                lowest = false;
-            if (x < lines.Length - 1 && lines[x + 1][y] <= current)
-                lowest = false;
-            if (y > 0 && line[y - 1] <= current)
-                lowest = false;
-            if (y < line.Length - 1 && line[y + 1] <= current)
-                lowest = false;
-
-            if (lowest)
-            {
-                WriteLine($"({x},{y}) = {current}");
-                score += current + 1;
-            }
-
+            return cumul + value + 1;
         }
-    }
+
+        return cumul;
+    });
 
     WriteLine(score);
 }
@@ -409,16 +391,14 @@ void Day08_Part2()
     */
     var symbols = new List<string> { "abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg" };
 
-    var lines = Input.GetLines(8, sample: false);
-
-    var finalLines = lines.Select(x =>
+    var lines = Input.GetLines(8, sample: false).Select(x =>
     {
         var parts = x.Split('|');
         return (digits: parts[0].Trim().Split(' ').Select(SortChars).ToList(), displays: parts[1].Trim().Split(' ').Select(SortChars).ToArray());
     }).ToList();
 
     var sum = 0L;
-    foreach (var line in finalLines)
+    foreach (var line in lines)
     {
         sum += SolveLine(line);
     }
@@ -614,7 +594,7 @@ void Day07()
 
 void Day06_Part2()
 {
-    var fishes = Input.GetLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var fishes = Input.GetLines(6).First().Split(',').Select(int.Parse).ToList();
 
     var timers = Enumerable.Repeat<long>(0, 10).ToList();
 
@@ -637,7 +617,7 @@ void Day06_Part2()
 
 void Day06()
 {
-    var fishs = Input.GetLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var fishs = Input.GetLines(6).First().Split(',').Select(int.Parse).ToList();
 
     for (int i = 0; i < 80; i++)
     {
@@ -894,7 +874,7 @@ void Day04()
 void Day03_Part2()
 {
     // string[]
-    var lines = Input.GetLines(3);
+    var lines = Input.GetLinesArray(3);
 
     // byte[lines.Length][12];
     var values = lines
@@ -938,7 +918,7 @@ void Day03_Part2()
 
 void Day03()
 {
-    var lines = Input.GetLines(3);
+    var lines = Input.GetLinesArray(3);
 
     var setBits = new int[12];
 
@@ -966,7 +946,7 @@ void Day03()
 
 void Day02()
 {
-    var lines = Input.GetLines(2);
+    var lines = Input.GetLinesArray(2);
 
     (int horizontal, int depth, int aim) position = (0, 0, 0);
 
@@ -1009,7 +989,9 @@ void Day01()
 /// </summary>
 static class Input
 {
-    public static string[] GetLines(int day, bool sample = false) => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
+    public static string[] GetLinesArray(int day, bool sample = false) => GetLines(day, sample).ToArray();
+
+    public static IEnumerable<string> GetLines(int day, bool sample = false) => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim());
 
     public static string GetFile(int day, bool sample = false)
     {
@@ -1091,11 +1073,26 @@ static class Extensions
         return -1;
     }
 
-    public static Grid<char> AsGridOfChars(this string[] lines, char? outOfBoundsValue = default) => new(lines, outOfBoundsValue);
+    /// <summary>
+    /// Assumes that each line is composed of the same amount of characters and returns a grid with all lines.
+    /// </summary>
+    public static Grid<char> AsGridOfChars(this IEnumerable<string> lines, char? outOfBoundsValue = default) => new(lines, outOfBoundsValue);
 
-    public static Grid<byte> AsGridOfBytes(this string[] lines, byte? outOfBoundsValue = default) => AsGrid(lines, l => l.Select(c => (byte)(c - '0')), outOfBoundsValue);
+    /// <summary>
+    /// Assumes that each line is composed of characters '0' to '9', convert them to an array of bytes and returns a grid with all lines.
+    /// </summary>
+    public static Grid<byte> AsGridOfBytes(this IEnumerable<string> lines, byte? outOfBoundsValue = default) => AsGrid(lines, l => l.Select(c => (byte)(c - '0')), outOfBoundsValue);
 
-    public static Grid<T> AsGrid<T>(this string[] lines, Func<string, IEnumerable<T>> transform, T? outOfBoundsValue = default) where T : struct => new(lines.Select(l => transform(l)), outOfBoundsValue);
+    /// <summary>
+    /// Converts all lines to a grid, assuming the with of the grid will be based on the number of values returned by the first line.
+    /// </summary>
+    /// <param name="lines">Lines to convert to grid.</param>
+    /// <param name="transform">Function to use to transform each line of text into a collection of values.</param>
+    /// <param name="outOfBoundsValue">
+    /// A specific value to return when out of bounds coordinates are used when calling <see cref="Grid{T}.Item(long,long)"/>.
+    /// Use <see langword="null" /> to raise an <see cref="ArgumentOutOfRangeException"/> when and out of bounds index is used.
+    /// </param>
+    public static Grid<T> AsGrid<T>(this IEnumerable<string> lines, Func<string, IEnumerable<T>> transform, T? outOfBoundsValue = default) where T : struct => new(lines.Select(l => transform(l)), outOfBoundsValue);
 
     public static IEnumerable<char> AsChars(this string @this) => @this;
 }
@@ -1196,6 +1193,25 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
     /// <summary>Gets the total number of values in the grid.</summary>
     public long Count => Width * Height;
 
+    public bool IsInBounds(in Point p) => IsInBounds(p.X, p.Y);
+
+    public bool IsInBounds(in long x, in long y) => x >= 0 && x <= XMax && y >= 0 && y <= YMax;
+
+    public bool TryGetValue(in Point p, out T value)
+    {
+        value = default;
+        if (!IsInBounds(p.X, p.Y)) return false;
+        value = this[p];
+        return true;
+    }
+    public bool TryGetValue(in long x, in long y, out T value)
+    {
+        value = default;
+        if (!IsInBounds(x, y)) return false;
+        value = this[x, y];
+        return true;
+    }
+
     public T this[in Point p]
     {
         get => this[p.X, p.Y];
@@ -1218,6 +1234,18 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
         }
     }
 
+    public T ValueOr(in Point p, T defaultValue)
+    {
+        if (!IsInBounds(p)) return defaultValue;
+        return this[p];
+    }
+
+    public T ValueOr(in long x, in long y, T defaultValue)
+    {
+        if (!IsInBounds(x, y)) return defaultValue;
+        return this[x, y];
+    }
+
     public IEnumerator<(Point point, T value)> GetEnumerator()
     {
         for (var y = 0; y < Height; y++)
@@ -1227,6 +1255,18 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
                 yield return (new Point(x, y), this[x, y]);
             }
         }
+    }
+
+    public T2 Aggregate<T2>(Func<Point, T2, T, T2> aggregator, in T2 seed = default) where T2 : struct
+    {
+        var value = seed;
+
+        foreach (var x in this)
+        {
+            value = aggregator(x.point, value, x.value);
+        }
+
+        return value;
     }
 
     /// <summary>
