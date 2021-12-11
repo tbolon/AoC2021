@@ -1,4 +1,4 @@
-﻿using static System.Diagnostics.Debug;
+﻿using static ProgramHelper;
 
 Setup();
 
@@ -8,41 +8,35 @@ Day11_Part2();
 
 void Day11_Part2()
 {
-    byte[][] octopuses = GetInputLines(11, sample: false).Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
-    var height = octopuses.Length;
-    var width = octopuses[0].Length;
+    const byte FLASHING = 10;
+    const byte OOB = 0xff;
+    var octopus = Input.GetLines(11, sample: false).AsGridOfBytes(OOB);
     var flashes = 0;
     var stepFlashes = 0;
     var defaultColor = Console.ForegroundColor;
     var step = 1;
 
-    //DrawGrid();
+    DrawGrid();
 
     while (true)
     {
         stepFlashes = 0;
 
-        for (int y = 0; y < height; y++)
+        foreach (var (point, value) in octopus)
         {
-            for (int x = 0; x < width; x++)
-            {
-                IncreaseEnergy(x, y);
-            }
+            IncreaseEnergy(point);
         }
 
-        //DrawGrid();
+        DrawGrid();
 
         // reset energy
-        for (int x = 0; x < width; x++)
+        foreach (var (point, value) in octopus)
         {
-            for (int y = 0; y < height; y++)
-            {
-                if (octopuses[x][y] == 10)
-                    octopuses[x][y] = 0;
-            }
+            if (value == FLASHING)
+                octopus[point] = 0;
         }
 
-        if (stepFlashes >= height * width)
+        if (stepFlashes >= octopus.Count)
         {
             WriteLine(step);
             return;
@@ -54,59 +48,55 @@ void Day11_Part2()
     void DrawGrid()
     {
         Console.SetCursorPosition(0, 0);
-        for (int y = 0; y < height; y++)
+        octopus.VisitConsole(v =>
         {
-            for (int x = 0; x < width; x++)
-            {
-                var value = octopuses[y][x];
-                Console.ForegroundColor = value == 10 ? ConsoleColor.Green : defaultColor;
-                Write(value == 10 ? "X" : value.ToString());
-                Console.ForegroundColor = defaultColor;
-            }
-            WriteLine("");
-        }
+            if (v == FLASHING) Write("X", ConsoleColor.Green);
+            else Write(v);
+        });
 
         WriteLine("");
         WriteLine(step);
     }
 
-    void IncreaseEnergy(int x, int y)
+    void IncreaseEnergy(Point p)
     {
-        if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return;
-        var value = octopuses[x][y];
-
-        if (value == 10)
+        var value = octopus[p];
+        if (value == OOB)
+        {
+            // out of bounds
+        }
+        else if (value == FLASHING)
         {
             // already flashed
         }
         else if (value == 9)
         {
             // flash
-            octopuses[x][y] = 10;
+            octopus[p] = FLASHING;
             stepFlashes++;
             flashes++;
 
             // release energy
-            IncreaseEnergy(x + 1, y);
-            IncreaseEnergy(x - 1, y);
-            IncreaseEnergy(x + 1, y + 1);
-            IncreaseEnergy(x - 1, y - 1);
-            IncreaseEnergy(x + 1, y - 1);
-            IncreaseEnergy(x - 1, y + 1);
-            IncreaseEnergy(x, y - 1);
-            IncreaseEnergy(x, y + 1);
+            IncreaseEnergy(p.Right);
+            IncreaseEnergy(p.Left);
+            IncreaseEnergy(p.RightUp);
+            IncreaseEnergy(p.RightDown);
+            IncreaseEnergy(p.LeftUp);
+            IncreaseEnergy(p.LeftDown);
+            IncreaseEnergy(p.Up);
+            IncreaseEnergy(p.Down);
         }
         else
         {
             // increase energy
-            octopuses[x][y]++;
+            octopus[p]++;
         }
     }
 }
 
 void Day11()
 {
-    byte[][] octopuses = GetInputLines(11, sample: false).Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
+    byte[][] octopuses = Input.GetLines(11, sample: false).Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
     var height = octopuses.Length;
     var width = octopuses[0].Length;
     var flashes = 0;
@@ -193,7 +183,7 @@ void Day10_Part2()
     Dictionary<char, int> count = new();
     List<long> scores = new();
 
-    var lines = GetInputLines(10, false);
+    var lines = Input.GetLines(10, false);
 
     foreach (var line in lines)
     {
@@ -246,7 +236,7 @@ void Day10_Part2()
 
 void Day10()
 {
-    var lines = GetInputLines(10, false);
+    var lines = Input.GetLines(10, false);
 
     Dictionary<char, int> count = new();
 
@@ -294,7 +284,7 @@ void Day10()
 
 void Day09_Part2()
 {
-    byte[][] data = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+    byte[][] data = Input.GetLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
     int height = data.Length, width = data[0].Length;
 
     // détection bassins ; x = vertical ; y = horizontal
@@ -351,7 +341,7 @@ void Day09_Part2()
 
 void Day09()
 {
-    var lines = GetInputLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
+    var lines = Input.GetLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
 
     var score = 0;
 
@@ -421,7 +411,7 @@ void Day08_Part2()
     */
     var symbols = new List<string> { "abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg" };
 
-    var lines = GetInputLines(8, sample: false);
+    var lines = Input.GetLines(8, sample: false);
 
     var finalLines = lines.Select(x =>
     {
@@ -560,7 +550,7 @@ void Day08()
     // 8 = 7 segments      x xxxxxxx
     // 9 = 6 segments     x  xxxx xx
     //                111331 8687397
-    var lines = GetInputLines(8).Select(x =>
+    var lines = Input.GetLines(8).Select(x =>
     {
         var parts = x.Split('|');
         return new { Digits = parts[0].Trim().Split(' '), Displays = parts[1].Trim().Split(' ') };
@@ -586,7 +576,7 @@ void Day08()
 
 void Day07_Part2()
 {
-    var crabs = GetInputLines(7).First().Split(',').Select(int.Parse).ToList();
+    var crabs = Input.GetLines(7).First().Split(',').Select(int.Parse).ToList();
     crabs.Sort();
 
     var median = crabs[crabs.Count / 2];
@@ -615,7 +605,7 @@ void Day07_Part2()
 
 void Day07()
 {
-    var crabs = GetInputLines(7).First().Split(',').Select(int.Parse).ToList();
+    var crabs = Input.GetLines(7).First().Split(',').Select(int.Parse).ToList();
     crabs.Sort();
 
     var median = crabs[crabs.Count / 2];
@@ -626,7 +616,7 @@ void Day07()
 
 void Day06_Part2()
 {
-    var fishes = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var fishes = Input.GetLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
 
     var timers = Enumerable.Repeat<long>(0, 10).ToList();
 
@@ -649,7 +639,7 @@ void Day06_Part2()
 
 void Day06()
 {
-    var fishs = GetInputLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
+    var fishs = Input.GetLines(6).First().Split(',').Select(x => int.Parse(x)).ToList();
 
     for (int i = 0; i < 80; i++)
     {
@@ -674,7 +664,7 @@ void Day06()
 
 void Day05_Part2()
 {
-    var lines = GetInputLines(5).Select(l => l.Split("->").SelectMany(x => x.Trim().Split(',').Select(x => int.Parse(x))).ToArray()).Select(a => new { X1 = a[0], Y1 = a[1], X2 = a[2], Y2 = a[3] }).ToArray();
+    var lines = Input.GetLines(5).Select(l => l.Split("->").SelectMany(x => x.Trim().Split(',').Select(x => int.Parse(x))).ToArray()).Select(a => new { X1 = a[0], Y1 = a[1], X2 = a[2], Y2 = a[3] }).ToArray();
 
     var maxX = lines.Max(x => Math.Max(x.X1, x.X2));
     var maxY = lines.Max(x => Math.Max(x.Y1, x.Y2));
@@ -708,7 +698,7 @@ void Day05_Part2()
 
 void Day05()
 {
-    var lines = GetInputLines(5).Select(l => l.Split("->").SelectMany(x => x.Trim().Split(',').Select(x => int.Parse(x))).ToArray()).Select(a => new { X1 = a[0], Y1 = a[1], X2 = a[2], Y2 = a[3] }).ToArray();
+    var lines = Input.GetLines(5).Select(l => l.Split("->").SelectMany(x => x.Trim().Split(',').Select(x => int.Parse(x))).ToArray()).Select(a => new { X1 = a[0], Y1 = a[1], X2 = a[2], Y2 = a[3] }).ToArray();
 
     var maxX = lines.Max(x => Math.Max(x.X1, x.X2));
     var maxY = lines.Max(x => Math.Max(x.Y1, x.Y2));
@@ -756,7 +746,7 @@ void Day05()
 void Day04_Part2()
 {
     var gridSize = 5;
-    var lines = GetInputLines(4).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+    var lines = Input.GetLines(4).Where(l => !string.IsNullOrEmpty(l)).ToArray();
     var numbers = lines[0].Split(',').Select(x => int.Parse(x)).ToArray();
     var grids = lines.Skip(1).Select(l => l.Trim().Split(' ', options: StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToArray()).Chunk(gridSize).ToArray();
     var bands = Enumerable.Range(0, grids.Length).Select(x => new int[10]).ToArray();
@@ -836,7 +826,7 @@ void Day04_Part2()
 void Day04()
 {
     var gridSize = 5;
-    var lines = GetInputLines(4).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+    var lines = Input.GetLines(4).Where(l => !string.IsNullOrEmpty(l)).ToArray();
     var numbers = lines[0].Split(',').Select(x => int.Parse(x)).ToArray();
     var grids = lines.Skip(1).Select(l => l.Trim().Split(' ', options: StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToArray()).Chunk(gridSize).ToArray();
     var bands = Enumerable.Range(0, grids.Length).Select(x => new int[10]).ToArray();
@@ -906,7 +896,7 @@ void Day04()
 void Day03_Part2()
 {
     // string[]
-    var lines = GetInputLines(3);
+    var lines = Input.GetLines(3);
 
     // byte[lines.Length][12];
     var values = lines
@@ -950,7 +940,7 @@ void Day03_Part2()
 
 void Day03()
 {
-    var lines = GetInputLines(3);
+    var lines = Input.GetLines(3);
 
     var setBits = new int[12];
 
@@ -978,7 +968,7 @@ void Day03()
 
 void Day02()
 {
-    var lines = GetInputLines(2);
+    var lines = Input.GetLines(2);
 
     (int horizontal, int depth, int aim) position = (0, 0, 0);
 
@@ -1002,7 +992,7 @@ void Day02()
 
 void Day01()
 {
-    var lines = GetInputLines(1)
+    var lines = Input.GetLines(1)
         .Select(l => int.Parse(l.Trim()))
         .ToArray();
 
@@ -1021,52 +1011,6 @@ void Setup()
     System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener()); // redirects Debug.WriteLine() to the console
 }
 
-T[][] MakeGrid<T>(int height, int width, T seed = default)
-{
-    return Enumerable.Repeat(seed, height).Select(_ => Enumerable.Repeat(seed, width).ToArray()).ToArray();
-}
-
-string[] GetInputLines(int day, bool sample = false)
-    => GetInputFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
-
-string GetInputFile(int day, bool sample = false)
-{
-    var filename = $"Day{day:00}.txt";
-
-    if (sample)
-    {
-        filename = $"Day{day:00}.sample.txt";
-        if (File.Exists(filename))
-        {
-            return File.ReadAllText(filename);
-        }
-
-        throw new NotSupportedException($"Impossible de charger le fichier exemple s'il n'est pas déjà présent sur le disque. Vous devez créer le fichier {filename} sur le disque avec le contenu de l'exemple");
-    }
-
-    if (File.Exists(filename))
-    {
-        return File.ReadAllText(filename);
-    }
-
-    var sessionId = Environment.GetEnvironmentVariable("AOC_SESSION");
-    if (string.IsNullOrEmpty(sessionId))
-        // pwsh: $env:AOC_SESSION = "..."
-        throw new InvalidOperationException($"You must set AOC_SESSION environment variable with your AoC session cookie value");
-
-    var cookieContainer = new System.Net.CookieContainer();
-    cookieContainer.Add(new System.Net.Cookie("session", sessionId, "/", ".adventofcode.com"));
-
-    using var handler = new HttpClientHandler() { CookieContainer = cookieContainer };
-    using var client = new HttpClient(handler);
-
-    var text = client.GetStringAsync($"https://adventofcode.com/2021/day/{day}/input").Result;
-
-    File.WriteAllText(filename, text);
-
-    return text;
-}
-
 static class Extensions
 {
     public static int IndexOf<T>(this T[] array, T value)
@@ -1079,4 +1023,267 @@ static class Extensions
 
         return -1;
     }
+
+    public static Grid<char> AsGridOfChars(this string[] lines, char? outOfBoundsValue = default)
+        => new(lines, outOfBoundsValue);
+
+    public static Grid<byte> AsGridOfBytes(this string[] lines, byte? outOfBoundsValue = default)
+        => AsGrid(lines, l => l.Select(c => (byte)(c - '0')), outOfBoundsValue);
+
+    public static Grid<T> AsGrid<T>(this string[] lines, Func<string, IEnumerable<T>> transform, T? outOfBoundsValue = default) where T : struct
+        => new(lines.Select(l => transform(l)), outOfBoundsValue);
+
+    public static IEnumerable<char> AsChars(this string @this) => @this;
+}
+
+static class ProgramHelper
+{
+    public static void Assert(bool condition) => System.Diagnostics.Debug.Assert(condition);
+    public static void Assert(bool condition, string? message) => System.Diagnostics.Debug.Assert(condition, message);
+    public static void ReadKey(bool intercept = true) => Console.ReadKey(intercept);
+    public static void SetCursorPosition(int left, int top) => Console.SetCursorPosition(left, top);
+    public static void WriteLine(object value, ConsoleColor? color = null) => WriteLine(value?.ToString(), color);
+    public static void WriteLine(string? message, ConsoleColor? color = null) => Console.Write(message + Environment.NewLine, color);
+    public static void WriteLine() => Console.Write(Environment.NewLine);
+    public static void Write(object value, ConsoleColor? color = null) => Write(value?.ToString(), color);
+    public static void Write(string? message, ConsoleColor? color = null)
+    {
+        ConsoleColor? previousColor = null;
+        if (color != null)
+        {
+            previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = color.Value;
+        }
+
+        Console.Write(message);
+
+        if (previousColor != null)
+        {
+            Console.ForegroundColor = previousColor.Value;
+        }
+    }
+}
+
+static class Input
+{
+    public static string[] GetLines(int day, bool sample = false)
+        => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToArray();
+
+    public static string GetFile(int day, bool sample = false)
+    {
+        var filename = $"Day{day:00}.txt";
+
+        if (sample)
+        {
+            filename = $"Day{day:00}.sample.txt";
+            if (File.Exists(filename))
+            {
+                return File.ReadAllText(filename);
+            }
+
+            throw new NotSupportedException($"Impossible de charger le fichier exemple s'il n'est pas déjà présent sur le disque. Vous devez créer le fichier {filename} sur le disque avec le contenu de l'exemple");
+        }
+
+        if (File.Exists(filename))
+        {
+            return File.ReadAllText(filename);
+        }
+
+        var sessionId = Environment.GetEnvironmentVariable("AOC_SESSION");
+        if (string.IsNullOrEmpty(sessionId))
+            // pwsh: $env:AOC_SESSION = "..."
+            throw new InvalidOperationException($"You must set AOC_SESSION environment variable with your AoC session cookie value");
+
+        var cookieContainer = new System.Net.CookieContainer();
+        cookieContainer.Add(new System.Net.Cookie("session", sessionId, "/", ".adventofcode.com"));
+
+        using var handler = new HttpClientHandler() { CookieContainer = cookieContainer };
+        using var client = new HttpClient(handler);
+
+        var text = client.GetStringAsync($"https://adventofcode.com/2021/day/{day}/input").Result;
+
+        File.WriteAllText(filename, text);
+
+        return text;
+    }
+}
+
+/// <summary>Represents a point in a space where X move from left to right and Y move from top to bottom.</summary>
+readonly struct Point
+{
+    public static readonly Point Empty = new(0, 0);
+
+    public Point(in long x, in long y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    /// <summary>Horizontal coordinate from left to right.</summary>
+    public long X { get; }
+
+    /// <summary>Vertical coordinate from top to bottom.</summary>
+    public long Y { get; }
+
+    public Point Left => new(X - 1, Y);
+    public Point Right => new(X + 1, Y);
+    public Point Up => new(X, Y - 1);
+    public Point Down => new(X, Y + 1);
+    public Point RightDown => new(X + 1, Y + 1);
+    public Point RightUp => new(X + 1, Y - 1);
+    public Point LeftDown => new(X - 1, Y + 1);
+    public Point LeftUp => new(X - 1, Y - 1);
+
+    public static Point operator +(in Point p1, in Point p2) => p1.Add(p2);
+    public static Point operator -(in Point p1, in Point p2) => p1.Subtract(p2);
+
+    public Point Add(in Point other) => new(X + other.X, Y + other.Y);
+    public Point Subtract(in Point other) => new(X - other.X, Y - other.Y);
+
+    public void Deconstruct(out long x, out long y)
+    {
+        x = X;
+        y = Y;
+    }
+
+    public override string ToString() => $"({X},{Y})";
+}
+
+/// <summary>
+/// Represents a grid where values are organized in multiple rows in vertical order from top to bottom, and where each row is constituted of values ordered from left to right.
+/// </summary>
+class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
+{
+    private readonly T[] _data;
+    private readonly T? _outOfBoundsValue;
+
+    public Grid(long width, long height, T? initialValue = default, T? outOfBoundsValue = default)
+    {
+        _data = new T[width * height];
+        _outOfBoundsValue = outOfBoundsValue;
+
+        if (initialValue != null)
+        {
+            for (int i = 0; i < _data.Length; i++)
+                _data[i] = initialValue.Value;
+        }
+    }
+
+    public Grid(in IEnumerable<IEnumerable<T>> source, T? outOfBoundsValue = default)
+    {
+        _outOfBoundsValue = outOfBoundsValue;
+        var tempItems = new List<T>();
+        foreach (var row in source)
+        {
+            foreach (var cell in row)
+            {
+                if (Height == 0) Width++;
+                tempItems.Add(cell);
+            }
+
+            Height++;
+        }
+
+        _data = tempItems.ToArray();
+    }
+
+    /// <summary>Gets the width of the grid.</summary>
+    public long Width { get; }
+
+    /// <summary>Gets the height of the grid.</summary>
+    public long Height { get; }
+
+    /// <summary>Gets the max acceptable value for x in <see cref="this[in long, in long]"/>.</summary>
+    public long XMax => Width - 1;
+
+    /// <summary>Gets the max acceptable value for y in <see cref="this[in long, in long]"/>.</summary>
+    public long YMax => Height - 1;
+
+    /// <summary>Gets the total number of values in the grid.</summary>
+    public long Count => Width * Height;
+
+    public T this[in Point p]
+    {
+        get => this[p.X, p.Y];
+        set => this[p.X, p.Y] = value;
+    }
+
+    public T this[in long x, in long y]
+    {
+        get
+        {
+            if (x < 0 || x > XMax) return _outOfBoundsValue ?? throw new ArgumentOutOfRangeException(nameof(x), x, $"x must be between 0 and {XMax}");
+            if (y < 0 || y > YMax) return _outOfBoundsValue ?? throw new ArgumentOutOfRangeException(nameof(y), y, $"y must be between 0 and {YMax}");
+            return _data[y * Width + x];
+        }
+        set
+        {
+            if (x < 0 || x > XMax) throw new ArgumentOutOfRangeException(nameof(x), x, $"x must be between 0 and {XMax}");
+            if (y < 0 || y > YMax) throw new ArgumentOutOfRangeException(nameof(y), y, $"y must be between 0 and {YMax}");
+            _data[y * Width + x] = value;
+        }
+    }
+
+    public IEnumerator<(Point point, T value)> GetEnumerator()
+    {
+        for (var y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                yield return (new Point(x, y), this[x, y]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Calls an aggregation function on each value of the grid.
+    /// </summary>
+    public T2 Aggregate<T2>(Func<T2, T, T2> aggregator, in T2 seed = default) where T2 : struct
+    {
+        var value = seed;
+
+        for (var y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                value = aggregator(value, this[x, y]);
+            }
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// Visit each value in grid order (left to right then top to bottom) and call the <paramref name="visit"/>.
+    /// Calls <see cref="Console.WriteLine"/> at the end of each row.
+    /// </summary>
+    public void VisitConsole(Action<T> visit) => Visit(visit, () => WriteLine());
+
+    public void Visit(Action<T> visit, Action? endOfRow = null)
+    {
+        for (var y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                visit(this[x, y]);
+            }
+
+            endOfRow?.Invoke();
+        }
+    }
+
+    public void Visit(Action<Point, T> visit, Action? endOfRow = null)
+    {
+        for (var y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                visit(new Point(x, y), this[x, y]);
+            }
+
+            endOfRow?.Invoke();
+        }
+    }
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 }
