@@ -282,59 +282,42 @@ void Day10()
 
 void Day09_Part2()
 {
+    var grid = Input.GetLines(9, sample: false).AsGridOfBytes(byte.MaxValue);
     byte[][] data = Input.GetLines(9, sample: false).Select(s => s.Select(c => (byte)(c - '0')).ToArray()).ToArray();
     int height = data.Length, width = data[0].Length;
 
-    // détection bassins ; x = vertical ; y = horizontal
-    List<(int x, int y)> points = new();
-    for (int x = 0; x < height; x++)
+    // détection bassins
+    List<Point> points = new();
+    foreach (var (point, value) in grid)
     {
-        var line = data[x];
-        for (int y = 0; y < width; y++)
+        if (grid[point.Right] > value && grid[point.Left] > value && grid[point.Up] > value && grid[point.Down] > value)
         {
-            var depth = line[y];
-
-            // détermine si le point est < à tous les voisins
-            var lowest = (x <= 0 || data[x - 1][y] > depth)
-                && (x >= height - 1 || data[x + 1][y] > depth)
-                && (y <= 0 || line[y - 1] > depth)
-                && (y >= width - 1 || line[y + 1] > depth);
-
-            if (lowest)
-            {
-                WriteLine($"({x},{y}) = {depth}");
-                points.Add((x, y));
-            }
+            points.Add(point);
         }
     }
 
     // grille avec un 0 pour les zones vides, 1 pour les zones déjà découvertes d'un bassin, 0xff pour les bords (hauteur 9)
-    byte[][] fill = data.Select(l => l.Select(c => (byte)(c == 9 ? 0xff : 0)).ToArray()).ToArray();
+    var fill = grid.Copy((point, value) => value == 9 ? byte.MaxValue : 0);
 
     // examen du bassin
     int[] sizes = new int[points.Count];
     for (int i = 0; i < points.Count; i++)
     {
-        sizes[i] = Visit(fill, points[i]);
+        sizes[i] = Visit(points[i]);
     }
 
     // calcul du produit des 3 plus grandes
-    // 1045660
     WriteLine(sizes.OrderByDescending(s => s).Take(3).Aggregate(1, (agg, current) => agg * current));
 
     // examine une case et démarre l'examen de ses voisines
-    int Visit(byte[][] fill, (int x, int y) point)
+    int Visit(Point point)
     {
-        int x = point.x, y = point.y;
-        if (x >= fill.Length || x < 0 || y >= fill[x].Length || y < 0)
-            return 0; // out of bounds
+        if (!fill.Contains(point) || fill[point] != 0)
+            return 0; // out of bounds or already visited
 
-        if (fill[x][y] != 0)
-            return 0; // invalid
+        fill[point] = 1; // marquée comme visitée
 
-        fill[x][y] = 1; // marquée comme visitée
-
-        return 1 + Visit(fill, (x - 1, y)) + Visit(fill, (x + 1, y)) + Visit(fill, (x, y - 1)) + Visit(fill, (x, y + 1));
+        return 1 + Visit(point.Left) + Visit(point.Right) + Visit(point.Up) + Visit(point.Down);
     }
 }
 
@@ -1152,6 +1135,8 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
     {
         _data = new T[width * height];
         _outOfBoundsValue = outOfBoundsValue;
+        Width = width;
+        Height = height;
 
         if (initialValue != null)
         {
@@ -1193,25 +1178,6 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
     /// <summary>Gets the total number of values in the grid.</summary>
     public long Count => Width * Height;
 
-    public bool IsInBounds(in Point p) => IsInBounds(p.X, p.Y);
-
-    public bool IsInBounds(in long x, in long y) => x >= 0 && x <= XMax && y >= 0 && y <= YMax;
-
-    public bool TryGetValue(in Point p, out T value)
-    {
-        value = default;
-        if (!IsInBounds(p.X, p.Y)) return false;
-        value = this[p];
-        return true;
-    }
-    public bool TryGetValue(in long x, in long y, out T value)
-    {
-        value = default;
-        if (!IsInBounds(x, y)) return false;
-        value = this[x, y];
-        return true;
-    }
-
     public T this[in Point p]
     {
         get => this[p.X, p.Y];
@@ -1232,18 +1198,6 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
             if (y < 0 || y > YMax) throw new ArgumentOutOfRangeException(nameof(y), y, $"y must be between 0 and {YMax}");
             _data[y * Width + x] = value;
         }
-    }
-
-    public T ValueOr(in Point p, T defaultValue)
-    {
-        if (!IsInBounds(p)) return defaultValue;
-        return this[p];
-    }
-
-    public T ValueOr(in long x, in long y, T defaultValue)
-    {
-        if (!IsInBounds(x, y)) return defaultValue;
-        return this[x, y];
     }
 
     public IEnumerator<(Point point, T value)> GetEnumerator()
@@ -1317,6 +1271,21 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
 
             endOfRow?.Invoke();
         }
+    }
+
+    public bool Contains(Point p)
+    {
+        return p.X >= 0 && p.X <= XMax && p.Y >= 0 && p.Y <= YMax;
+    }
+
+    public Grid<T2> Copy<T2>(Func<Point, T, T2> transform) where T2 : struct
+    {
+        var result = new Grid<T2>(Width, Height);
+        foreach (var (point, value) in this)
+        {
+            result[point] = transform(point, value);
+        }
+        return result;
     }
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
