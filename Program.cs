@@ -2,9 +2,176 @@
 
 Setup();
 
-Day10_Part2();
+Day11_Part2();
 
 #pragma warning disable CS8321
+
+void Day11_Part2()
+{
+    string[] lines = GetInputLines(11, sample: false);
+    byte[][] octopuses = lines
+        .Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
+    var height = octopuses.Length;
+    var width = octopuses[0].Length;
+    var flashes = 0;
+    var stepFlashes = 0;
+    var defaultColor = Console.ForegroundColor;
+    var step = 1;
+
+    //DrawGrid();
+
+    while (true)
+    {
+        stepFlashes = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                ReceiveFlash(x, y);
+            }
+        }
+
+        //DrawGrid();
+
+        // reset energy
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (octopuses[x][y] == 10)
+                    octopuses[x][y] = 0;
+            }
+        }
+
+        if (stepFlashes >= height * width)
+        {
+            WriteLine(step);
+            return;
+        }
+
+        step++;
+    }
+
+    void DrawGrid()
+    {
+        Console.SetCursorPosition(0, 0);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                var value = octopuses[y][x];
+                Console.ForegroundColor = value == 10 ? ConsoleColor.Green : defaultColor;
+                Write(value == 10 ? "X" : value.ToString());
+                Console.ForegroundColor = defaultColor;
+            }
+            WriteLine("");
+        }
+
+        WriteLine("");
+        WriteLine(step);
+    }
+
+    void ReceiveFlash(int x, int y)
+    {
+        if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return;
+        var value = octopuses[x][y];
+
+        if (value == 10)
+        {
+            // already flashed
+        }
+        else if (value == 9)
+        {
+            // flash
+            octopuses[x][y] = 10;
+            stepFlashes++;
+            flashes++;
+
+            ReceiveFlash(x + 1, y);
+            ReceiveFlash(x - 1, y);
+            ReceiveFlash(x + 1, y + 1);
+            ReceiveFlash(x - 1, y - 1);
+            ReceiveFlash(x + 1, y - 1);
+            ReceiveFlash(x - 1, y + 1);
+            ReceiveFlash(x, y - 1);
+            ReceiveFlash(x, y + 1);
+        }
+        else
+        {
+            octopuses[x][y]++;
+        }
+    }
+}
+
+
+void Day11()
+{
+    string[] lines = GetInputLines(11, sample: false);
+    byte[][] octopuses = lines
+        .Select(l => l.Select(x => x).Select(x => (byte)(x - '0')).ToArray()).ToArray();
+    var height = octopuses.Length;
+    var width = octopuses[0].Length;
+    var flashes = 0;
+    var stepFlashes = 0;
+    var defaultColor = Console.ForegroundColor;
+
+    for (int i = 0; i < 100; i++)
+    {
+        stepFlashes = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                ReceiveFlash(x, y);
+            }
+        }
+
+        // reset energy
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (octopuses[x][y] == 10)
+                    octopuses[x][y] = 0;
+            }
+        }
+    }
+
+    WriteLine(flashes);
+
+    void ReceiveFlash(int x, int y)
+    {
+        if (x < 0 || y < 0 || x > width - 1 || y > height - 1) return;
+        var value = octopuses[x][y];
+
+        if (value == 10)
+        {
+            // already flashed
+        }
+        else if (value == 9)
+        {
+            // flash
+            octopuses[x][y] = 10;
+            stepFlashes++;
+            flashes++;
+
+            ReceiveFlash(x + 1, y);
+            ReceiveFlash(x - 1, y);
+            ReceiveFlash(x + 1, y + 1);
+            ReceiveFlash(x - 1, y - 1);
+            ReceiveFlash(x + 1, y - 1);
+            ReceiveFlash(x - 1, y + 1);
+            ReceiveFlash(x, y - 1);
+            ReceiveFlash(x, y + 1);
+        }
+        else
+        {
+            octopuses[x][y]++;
+        }
+    }
+}
 
 void Day10_Part2()
 {
@@ -59,7 +226,7 @@ void Day10_Part2()
                 stack.Push(c);
                 continue;
             }
-            
+
             // detect invalid (part1)
             var c2 = stack.Pop();
             if (pairs[c] != c2)
@@ -853,6 +1020,11 @@ void Day01()
 void Setup()
 {
     System.Diagnostics.Trace.Listeners.Add(new System.Diagnostics.ConsoleTraceListener()); // redirects Debug.WriteLine() to the console
+}
+
+T[][] MakeGrid<T>(int height, int width, T seed = default)
+{
+    return Enumerable.Repeat(seed, height).Select(_ => Enumerable.Repeat(seed, width).ToArray()).ToArray();
 }
 
 string[] GetInputLines(int day, bool sample = false)
