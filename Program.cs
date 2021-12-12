@@ -93,8 +93,6 @@ void Day12_Part2()
     }
 
     WriteLine(paths.Count);
-
-
 }
 
 void Day12()
