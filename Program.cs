@@ -4,6 +4,44 @@ Day12();
 
 #pragma warning disable CS8321
 
+
+void Day12_Part2_Alt()
+{
+    var segments = Input.GetLines(12, sample: false).Select(x => x.Split('-'));
+
+    // init
+    Dictionary<string, AoC2021.Day10.Cave> caves = new();
+    foreach (var segment in segments)
+    {
+        var fromName = segment[0];
+        var toName = segment[1];
+
+        if (!caves.TryGetValue(fromName, out var from))
+        {
+            from = new AoC2021.Day10.Cave(fromName);
+            caves.Add(fromName, from);
+        }
+
+        if (!caves.TryGetValue(toName, out var to))
+        {
+            to = new AoC2021.Day10.Cave(toName);
+            caves.Add(toName, to);
+        }
+
+        if (!from.IsEnd && !to.IsStart)
+        {
+            from.Caves.Add(to);
+        }
+
+        if (!from.IsStart && !to.IsEnd)
+        {
+            to.Caves.Add(from);
+        }
+    }
+
+    // solve
+}
+
 void Day12_Part2()
 {
     var segments = Input.GetLines(12, sample: false).Select(x => x.Split('-'));
