@@ -1,8 +1,182 @@
 ﻿using static ProgramHelper;
 
-Day09_Part2();
+Day12();
 
 #pragma warning disable CS8321
+
+void Day12_Part2()
+{
+    var segments = Input.GetLines(12, sample: false).Select(x => x.Split('-'));
+    Dictionary<string, List<string>> maps = new();
+
+    foreach (var segment in segments)
+    {
+        var from = segment[0];
+        var to = segment[1];
+        if (from != "end" && to != "start")
+        {
+            if (!maps.TryGetValue(from, out var nodes))
+            {
+                maps[from] = nodes = new List<string>();
+            }
+
+            if (!nodes.Contains(to))
+                nodes.Add(to);
+        }
+
+        if (from != "start" && to != "end")
+        {
+            if (!maps.TryGetValue(to, out var nodes))
+            {
+                maps[to] = nodes = new List<string>();
+            }
+
+            if (!nodes.Contains(from))
+                nodes.Add(from);
+        }
+    }
+
+    HashSet<string> paths = new();
+
+    // chemins à explorer
+    var missingPaths = new Stack<string>();
+    foreach (var node in maps["start"])
+    {
+        missingPaths.Push($"start,{node}");
+    }
+
+    while (missingPaths.Count > 0)
+    {
+        var path = missingPaths.Pop();
+
+        var lastNode = path.Split(',').Last();
+
+        if (maps.TryGetValue(lastNode, out var nextNodes))
+        {
+            foreach (var nextNode in nextNodes)
+            {
+                var nextPath = $"{path},{nextNode}";
+
+                var isSmall = nextNode.All(c => char.IsLower(c));
+
+                if (isSmall)
+                {
+                    // cave small déjà explorée
+                    if (path.Contains($",{nextNode}"))
+                    {
+                        if (path.StartsWith("start2,"))
+                        {
+                            // on a déjà exploré une cave deux fois, on ne peut plus
+                            continue;
+                        }
+                        else
+                        {
+                            // on marque comme quoi on a exploré deux fois une cave, et on laisse continuer
+                            nextPath = nextPath.Replace("start,", "start2,");
+                        }
+                    }
+                }
+
+                if (nextNode == "end")
+                {
+                    if (!paths.Contains(nextPath))
+                    {
+                        paths.Add(nextPath);
+                    }
+                }
+                else if (!missingPaths.Contains(nextPath))
+                {
+                    missingPaths.Push(nextPath);
+                }
+            }
+        }
+    }
+
+    WriteLine(paths.Count);
+
+
+}
+
+void Day12()
+{
+    var segments = Input.GetLines(12, sample: false).Select(x => x.Split('-'));
+    Dictionary<string, List<string>> maps = new();
+
+    foreach (var segment in segments)
+    {
+        var from = segment[0];
+        var to = segment[1];
+        if (from != "end" && to != "start")
+        {
+            if (!maps.TryGetValue(from, out var nodes))
+            {
+                maps[from] = nodes = new List<string>();
+            }
+
+            if (!nodes.Contains(to))
+                nodes.Add(to);
+        }
+
+        if (from != "start" && to != "end")
+        {
+            if (!maps.TryGetValue(to, out var nodes))
+            {
+                maps[to] = nodes = new List<string>();
+            }
+
+            if (!nodes.Contains(from))
+                nodes.Add(from);
+        }
+    }
+
+    HashSet<string> paths = new();
+
+    // chemins à explorer
+    var missingPaths = new Stack<string>();
+    foreach (var node in maps["start"])
+    {
+        missingPaths.Push($"start,{node}");
+    }
+
+    while (missingPaths.Count > 0)
+    {
+        var path = missingPaths.Pop();
+
+        var lastNode = path.Split(',').Last();
+
+        if (maps.TryGetValue(lastNode, out var nextNodes))
+        {
+            foreach (var nextNode in nextNodes)
+            {
+                var nextPath = $"{path},{nextNode}";
+
+                var isSmall = nextNode.All(c => char.IsLower(c));
+
+                // cave small déjà explorée
+                if (isSmall && path.Contains($",{nextNode}"))
+                {
+                    continue;
+                }
+
+                if (nextNode == "end")
+                {
+                    if (!paths.Contains(nextPath))
+                    {
+                        paths.Add(nextPath);
+                    }
+                }
+                else if (!missingPaths.Contains(nextPath))
+                {
+                    missingPaths.Push(nextPath);
+                }
+            }
+        }
+    }
+
+    WriteLine(paths.Count);
+
+
+}
 
 void Day11_Part2()
 {
