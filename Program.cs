@@ -1,9 +1,144 @@
 ﻿using static ProgramHelper;
 
-Day12();
+Day13_Part2();
 
 #pragma warning disable CS8321
 
+void Day13_Part2()
+{
+    var lines = Input.GetLines(13, sample: false);
+    var coords = lines.Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith("fold along")).Select(x => x.Split(',').Select(int.Parse).ToArray());
+    var operations = lines.Where(l => !string.IsNullOrEmpty(l) && l.StartsWith("fold along")).Select(l => new
+    {
+        Vertical = l.StartsWith("fold along x="),
+        Coordinate = int.Parse(l.Substring("fold along x=".Length))
+    }).ToArray();
+
+    long width = coords.Max(x => x[0]) + 1;
+    long height = coords.Max(x => x[1] + 1);
+
+    var grid = new Grid<bool>(width, height);
+
+    foreach (var point in coords)
+    {
+        grid[point[0], point[1]] = true;
+    }
+
+    foreach (var op in operations)
+    {
+        // new grid after folding
+        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : width, !op.Vertical ? op.Coordinate : height);
+
+        // copy existing values
+        foreach (var x in newGrid)
+        {
+            newGrid[x.point] = grid[x.point];
+        }
+
+        // add folded values
+        for (int x = op.Vertical ? op.Coordinate : 0; x < grid.Width; x++)
+        {
+            for (int y = !op.Vertical ? op.Coordinate : 0; y < grid.Height; y++)
+            {
+                if (grid[x, y])
+                {
+                    var newPoint = new Point(
+                        op.Vertical ? 2 * op.Coordinate - x : x,
+                        !op.Vertical ? 2 * op.Coordinate - y : y
+                        );
+
+                    newGrid[newPoint] = true;
+                }
+            }
+        }
+
+        grid = newGrid;
+        width = grid.Width;
+        height = grid.Height;
+    }
+
+    DrawGrid(grid);
+
+    void DrawGrid(Grid<bool> grid, bool? vertical = null, int coordinate = 0)
+    {
+        Clear();
+        grid.VisitConsole(x => Write(x ? '#' : '.'));
+        if (vertical != null)
+        {
+            if (vertical == true)
+            {
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    SetCursorPosition(coordinate, y);
+                    Write('|');
+                }
+            }
+            else
+            {
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    SetCursorPosition(x, coordinate);
+                    Write('-');
+                }
+
+            }
+        }
+    }
+}
+
+void Day13()
+{
+    var lines = Input.GetLines(13, sample: false);
+    var coords = lines.Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith("fold along")).Select(x => x.Split(',').Select(int.Parse).ToArray());
+    var operations = lines.Where(l => !string.IsNullOrEmpty(l) && l.StartsWith("fold along")).Select(l => new
+    {
+        Vertical = l.StartsWith("fold along x="),
+        Coordinate = int.Parse(l.Substring("fold along x=".Length))
+    }).ToArray();
+
+    var width = coords.Max(x => x[0]) + 1;
+    var height = coords.Max(x => x[1] + 1);
+
+    var grid = new Grid<bool>(width, height);
+
+    foreach (var point in coords)
+    {
+        grid[point[0], point[1]] = true;
+    }
+
+    foreach (var op in operations)
+    {
+        // new grid after folding
+        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : width, !op.Vertical ? op.Coordinate : height);
+
+        // copy existing values
+        foreach (var x in newGrid)
+        {
+            newGrid[x.point] = grid[x.point];
+        }
+
+        // add folded values
+        for (int x = op.Vertical ? op.Coordinate : 0; x < grid.Width; x++)
+        {
+            for (int y = !op.Vertical ? op.Coordinate : 0; y < grid.Height; y++)
+            {
+                if (grid[x, y])
+                {
+                    var newPoint = new Point(
+                        op.Vertical ? 2 * op.Coordinate - x : x,
+                        !op.Vertical ? 2 * op.Coordinate - y : y
+                        );
+
+                    newGrid[newPoint] = true;
+                }
+            }
+        }
+
+        break; // part 1
+    }
+
+    WriteLine(grid.Sum(x => x.value ? 1 : 0));
+}
 
 void Day12_Part2_Alt()
 {
@@ -1232,6 +1367,7 @@ static class ProgramHelper
     public static void Assert(bool condition, string? message) => System.Diagnostics.Debug.Assert(condition, message);
     public static void ReadKey(bool intercept = true) => Console.ReadKey(intercept);
     public static void SetCursorPosition(int left, int top) => Console.SetCursorPosition(left, top);
+    public static void Clear() => Console.Clear();
     public static void WriteLine(object value, ConsoleColor? color = null) => WriteLine(value?.ToString(), color);
     public static void WriteLine(string? message, ConsoleColor? color = null) => Console.Write(message + Environment.NewLine, color);
     public static void WriteLine() => Console.Write(Environment.NewLine);
