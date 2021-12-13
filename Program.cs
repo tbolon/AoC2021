@@ -14,10 +14,7 @@ void Day13_Part2()
         Coordinate = int.Parse(l.Substring("fold along x=".Length))
     }).ToArray();
 
-    long width = coords.Max(x => x[0]) + 1;
-    long height = coords.Max(x => x[1] + 1);
-
-    var grid = new Grid<bool>(width, height);
+    var grid = new Grid<bool>(coords.Max(x => x[0]) + 1, coords.Max(x => x[1] + 1));
 
     foreach (var point in coords)
     {
@@ -27,12 +24,12 @@ void Day13_Part2()
     foreach (var op in operations)
     {
         // new grid after folding
-        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : width, !op.Vertical ? op.Coordinate : height);
+        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : grid.Width, !op.Vertical ? op.Coordinate : grid.Height);
 
         // copy existing values
-        foreach (var x in newGrid)
+        foreach (var (point, value) in newGrid)
         {
-            newGrid[x.point] = grid[x.point];
+            newGrid[point] = grid[point];
         }
 
         // add folded values
@@ -53,8 +50,6 @@ void Day13_Part2()
         }
 
         grid = newGrid;
-        width = grid.Width;
-        height = grid.Height;
     }
 
     DrawGrid(grid);
@@ -96,10 +91,7 @@ void Day13()
         Coordinate = int.Parse(l.Substring("fold along x=".Length))
     }).ToArray();
 
-    var width = coords.Max(x => x[0]) + 1;
-    var height = coords.Max(x => x[1] + 1);
-
-    var grid = new Grid<bool>(width, height);
+    var grid = new Grid<bool>(coords.Max(x => x[0]) + 1, coords.Max(x => x[1] + 1));
 
     foreach (var point in coords)
     {
@@ -109,12 +101,12 @@ void Day13()
     foreach (var op in operations)
     {
         // new grid after folding
-        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : width, !op.Vertical ? op.Coordinate : height);
+        var newGrid = new Grid<bool>(op.Vertical ? op.Coordinate : grid.Width, !op.Vertical ? op.Coordinate : grid.Height);
 
         // copy existing values
-        foreach (var x in newGrid)
+        foreach (var (point, value) in newGrid)
         {
-            newGrid[x.point] = grid[x.point];
+            newGrid[point] = grid[point];
         }
 
         // add folded values
