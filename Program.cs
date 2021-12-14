@@ -19,11 +19,13 @@ void Day14_Part2()
     var permutations = lines.Skip(1).Select(l => l.Split('-')).ToDictionary(a => AsKey(a[0][0], a[0][1]), a => a[1][2]);
 
     // on va optimiser la recherche récursive en stockant le tableau de score pour un ensemble paire + niveau de profondeur de récursivité
-    // sans ça, le calcul prend trop de temps
+    // sans ça, le calcul prend trop de temps.
+    //
+    // attention: le raccourci ne contient le score que pour la partie *générée* de la paire, par ex le score de (AB) n'inclut pas la présence de 'A' et 'B'.
     var shortcuts = new Dictionary<(uint, int), long[]>();
 
     // le tableau de score est un tableau avec 0 = 'A'
-    // on l'initialise avec le nb de caractères du template
+    // on l'initialise avec le nb de caractères du template vu que la méthode Visit() ne renvoie que le score de la partie *générée*.
     var finalScore = new long[26];
     foreach (var c in polymerTemplate)
     {
@@ -37,26 +39,25 @@ void Day14_Part2()
         Visit(polymerTemplate[x - 1], polymerTemplate[x], 1, finalScore);
     }
 
+    // score final = nb d'occurences du caractère le plus présent - nb d'occurence du caractère le moins présent
     WriteLine(finalScore.Where(p => p != 0).Max() - finalScore.Where(p => p != 0).Min());
 
     // obtient une clé unique sur 32 bits à partir de 2 caractères de 16 bits
     // utilisé pour essayer d'optimiser le lookup, pas sur que ce soit finalement utile
-    uint AsKey(char c1, char c2)
-    {
-        return ((uint)(c1 - 'A')) << 16 | ((uint)(c2 - 'A'));
-    }
+    uint AsKey(char c1, char c2) => ((uint)(c1 - 'A')) << 16 | ((uint)(c2 - 'A'));
 
-    // visite une paire XX avec le niveau de profondeur "level" et stocke le résultat dans le tableau de score donné
-    void Visit(char c1, char c2, int level, long[] parentScore)
+    // visite une paire AB avec le niveau de profondeur "level" et ajoute le score dans le tableau donné
+    // attention: le score n'est calculé que pour la partie *générée*
+    void Visit(char a, char b, int level, long[] parentScore)
     {
         if (level > maxLevel)
         {
             return;
         }
 
-        var key = AsKey(c1, c2);
+        var key = AsKey(a, b);
 
-        // si le résultat de cette combinaison paire + niveau a déjà été calculée on la réutilise
+        // si le résultat de cette combinaison (paire, niveau) a déjà été calculée on la réutilise
         if (shortcuts.TryGetValue((key, level), out var shortcut))
         {
             Add(shortcut, parentScore);
@@ -66,18 +67,19 @@ void Day14_Part2()
         // nouveau score à calculer pour cette paire+profondeur
         var score = new long[26];
 
+        // on recherche la lettre à insérer AB => AXB
         var permutation = permutations[key];
 
         // ajout du score de la permutation ajoutée
         score[permutation - 'A']++;
 
-        // on ajoute le score de toutes les itérations successives pour la partie gauche
-        Visit(c1, permutation, level + 1, score);
+        // on ajoute le score de toutes les itérations successives pour la partie gauche (AX)
+        Visit(a, permutation, level + 1, score);
 
-        // on ajoute le score de toutes les itérations successives pour la partie droite
-        Visit(permutation, c2, level + 1, score);
+        // on ajoute le score de toutes les itérations successives pour la partie droite (XB)
+        Visit(permutation, b, level + 1, score);
 
-        // on met en cache le score local
+        // on met en cache le score local (AB, level)
         shortcuts[(key, level)] = score;
 
         // on ajoute le score local au score parent
