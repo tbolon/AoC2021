@@ -1,6 +1,11 @@
 ﻿using static ProgramHelper;
 
+var sw = new System.Diagnostics.Stopwatch();
+
+sw.Start();
 Day14_Part2();
+sw.Stop();
+WriteLine(sw.Elapsed);
 
 #pragma warning disable CS8321
 
@@ -33,7 +38,6 @@ void Day14_Part2()
     }
 
     WriteLine(finalScore.Where(p => p != 0).Max() - finalScore.Where(p => p != 0).Min());
-    ReadKey();
 
     // obtient une clé unique sur 32 bits à partir de 2 caractères de 16 bits
     // utilisé pour essayer d'optimiser le lookup, pas sur que ce soit finalement utile
