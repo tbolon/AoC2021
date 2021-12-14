@@ -1,8 +1,60 @@
 ﻿using static ProgramHelper;
 
-Day13_Part2();
+Day14_Part2();
 
 #pragma warning disable CS8321
+
+void Day14_Part2()
+{
+    var lines = Input.GetLines(14, sample: true).ToArray();
+    var polymerTemplate = lines[0].ToList();
+    var permutations = lines.Skip(1).Select(l => l.Split('-')).ToDictionary(a => a[0].Trim(), a => a[1][2]);
+
+    var score = new Dictionary<char, long>();
+
+    for (int i = 0; i < polymerTemplate.Count - 1; i++)
+    {
+        var c = polymerTemplate[i];
+        var c2 = polymerTemplate[i + 1];
+        var pair = string.Concat(polymerTemplate[i], polymerTemplate[i + 1]);
+    }
+}
+
+void Day14()
+{
+    var lines = Input.GetLines(14, sample: false).ToArray();
+    var polymer = lines[0].ToList();
+    var permutations = lines.Skip(1).Select(l => l.Split('-')).ToDictionary(a => a[0].Trim(), a => a[1][2]);
+
+    Stack<char> insertions = new();
+
+    for (int i = 0; i < 10; i++)
+    {
+        insertions.Clear();
+
+        for (int x = 1; x < polymer.Count; x++)
+        {
+            var pair = string.Concat(polymer[x - 1], polymer[x]);
+            var insertion = permutations[pair];
+            insertions.Push(insertion);
+        }
+
+        Assert(insertions.Count == polymer.Count - 1);
+
+        for (int x = insertions.Count; x >= 1; x--)
+        {
+            polymer.Insert(x, insertions.Pop());
+        }
+    }
+
+    var score = polymer.Aggregate(new Dictionary<char, int>(), (cumul, c) =>
+    {
+        cumul[c] = 1 + (cumul.TryGetValue(c, out var current) ? current : 0);
+        return cumul;
+    });
+
+    WriteLine(score.Max(p => p.Value) - score.Min(p => p.Value));
+}
 
 void Day13_Part2()
 {
@@ -1312,7 +1364,7 @@ static class Input
 {
     public static string[] GetLinesArray(int day, bool sample = false) => GetLines(day, sample).ToArray();
 
-    public static IEnumerable<string> GetLines(int day, bool sample = false) => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim());
+    public static IEnumerable<string> GetLines(int day, bool sample = false) => GetFile(day, sample).Split('\n', options: StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).Where(l => !string.IsNullOrEmpty(l));
 
     public static string GetFile(int day, bool sample = false)
     {
@@ -1355,8 +1407,19 @@ static class Input
 
 static class ProgramHelper
 {
+    /// <summary>
+    /// Checks for a condition; if the condition is false, displays a message box that shows the call stack.
+    /// </summary>
+    /// <param name="condition">The conditional expression to evaluate. If the condition is true, a failure message is not sent and the message box is not displayed.</param>
     public static void Assert(bool condition) => System.Diagnostics.Debug.Assert(condition);
+
+    /// <summary>
+    /// Checks for a condition; if the condition is false, outputs a specified message and displays a message box that shows the call stack.
+    /// </summary>
+    /// <param name="condition">The conditional expression to evaluate. If the condition is true, the specified message is not sent and the message box is not displayed.</param>
+    /// <param name="message">The message to display.</param>
     public static void Assert(bool condition, string? message) => System.Diagnostics.Debug.Assert(condition, message);
+
     public static void ReadKey(bool intercept = true) => Console.ReadKey(intercept);
     public static void SetCursorPosition(int left, int top) => Console.SetCursorPosition(left, top);
     public static void Clear() => Console.Clear();
