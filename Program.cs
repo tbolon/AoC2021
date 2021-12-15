@@ -52,6 +52,9 @@ void Day15_Part2()
     // build paths
     while (frontier.Count != 0)
     {
+        // on examine le point le plus intéressant pour l'instant
+        // c'est l'avantage de la PriorityQueue : elle dépile les éléments de plus faible priorité en premier
+        // on va donc examiner les chemins les moins couteux en priorité
         current = frontier.Dequeue();
 
         // trouvé
@@ -73,7 +76,7 @@ void Day15_Part2()
                 // on stocke le cout jusqu'au point
                 costSoFar[next] = newCost;
 
-                // on mémorise le point avec son coût
+                // on mémorise le point avec son coût comme étant à explorer
                 var priority = newCost;
                 frontier.Enqueue(next, priority);
 
