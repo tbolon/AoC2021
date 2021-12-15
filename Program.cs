@@ -6,6 +6,7 @@ Day15_Part2();
 
 void Day15_Part2()
 {
+    // thanks to the incredible https://www.redblobgames.com/pathfinding/a-star/introduction.html
     // initial grid
     var smallGrid = Input.GetLines(15, sample: false).AsGridOfBytes(byte.MaxValue);
 
@@ -110,6 +111,7 @@ void Day15_Part2()
 
 void Day15()
 {
+    // thanks to the incredible https://www.redblobgames.com/pathfinding/a-star/introduction.html
     // initial grid
     var grid = Input.GetLines(15, sample: true).AsGridOfBytes(byte.MaxValue);
 
