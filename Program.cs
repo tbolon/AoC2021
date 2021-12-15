@@ -1,13 +1,185 @@
 ﻿using static ProgramHelper;
 
-var sw = new System.Diagnostics.Stopwatch();
-
-sw.Start();
-Day14_Part2();
-sw.Stop();
-WriteLine(sw.Elapsed);
+Day15_Part2();
 
 #pragma warning disable CS8321
+
+void Day15_Part2()
+{
+    // initial grid
+    var smallGrid = Input.GetLines(15, sample: false).AsGridOfBytes(byte.MaxValue);
+
+    // fill final grid
+    var grid = new Grid<int>(smallGrid.Width * 5, smallGrid.Height * 5);
+    for (int x = 0; x < 5; x++)
+    {
+        for (int y = 0; y < 5; y++)
+        {
+            foreach (var (point, value) in smallGrid)
+            {
+                var newX = (smallGrid.Width * x) + point.X;
+                var newY = (smallGrid.Height * y) + point.Y;
+                var newValue = ((value + x + y - 1) % 9) + 1;
+                if (x == 0 && y == 0)
+                {
+                    Assert(newValue == value);
+                }
+
+                grid[newX, newY] = newValue;
+            }
+        }
+    }
+
+    var start = Point.Empty;
+    var end = new Point(grid.XMax, grid.YMax);
+    Point current;
+
+    // contient pour chaque point le coût depuis le départ
+    // on va y ajouter tous les points que l'on croise avec le coût pour y arriver
+    // si cette liste est vide, on a perdu (aucun chemin)
+    // dès que l'on trouve la sortie on arrête d'explorer cette pile
+    var frontier = new PriorityQueue<Point, int>();
+    frontier.Enqueue(start, 0);
+
+    // contient les chemins calculés les plus optimisés entre les différents noeuds du graphe
+    var cameFrom = new Dictionary<Point, Point>();
+
+    // pour chaque point, mémorise le coût pour arriver à ce point depuis le départ (sans le cout du point lui même)
+    var costSoFar = new Dictionary<Point, int>();
+    costSoFar[start] = 0;
+
+    // build paths
+    while (frontier.Count != 0)
+    {
+        current = frontier.Dequeue();
+
+        // trouvé
+        if (current == end)
+        {
+            break;
+        }
+
+        // on examine les voisins
+        foreach (var next in current.Neighbors(grid))
+        {
+            // le coût est celui d'avant ce point + coût du point
+            var newCost = costSoFar[current] + grid[current];
+
+            // si le nouveau point n'a jamais été exploré, ou que le cout pour y arriver est plus faible
+            // alors ce point est intéressant et doit être conservé
+            if (!costSoFar.ContainsKey(next) || newCost < costSoFar[next])
+            {
+                // on stocke le cout jusqu'au point
+                costSoFar[next] = newCost;
+
+                // on mémorise le point avec son coût
+                var priority = newCost;
+                frontier.Enqueue(next, priority);
+
+                // on stocke le chemin inverse
+                cameFrom[next] = current;
+            }
+        }
+    }
+
+    // create reverse path
+    current = end;
+    var path = new List<Point>();
+    while (current != start)
+    {
+        path.Add(current);
+        current = cameFrom[current];
+    }
+    path.Add(start);
+    path.Reverse();
+
+    grid.VisitConsole((p, x) =>
+    {
+        if (!path.Contains(p))
+        {
+            Write((char)(x + '0'));
+        }
+        else
+        {
+            Write((char)(x + '0'), ConsoleColor.Green);
+        }
+    });
+
+    WriteLine(path.Sum(p => p == start ? 0 : grid[p]));
+}
+
+void Day15()
+{
+    // initial grid
+    var grid = Input.GetLines(15, sample: true).AsGridOfBytes(byte.MaxValue);
+
+    var start = Point.Empty;
+    var end = new Point(grid.XMax, grid.YMax);
+    Point current;
+
+    var frontier = new PriorityQueue<Point, int>();
+    frontier.Enqueue(start, 0);
+
+    var cameFrom = new Dictionary<Point, Point>();
+    //cameFrom[start] = null;
+
+    var costSoFar = new Dictionary<Point, int>();
+    costSoFar[start] = 0;
+
+    // build paths
+    while (frontier.Count != 0)
+    {
+        current = frontier.Dequeue();
+
+        if (current == end)
+        {
+            break;
+        }
+
+        foreach (var next in current.Neighbors(grid))
+        {
+            var newCost = costSoFar[current] + grid[current];
+
+            if (!costSoFar.ContainsKey(next) || newCost < costSoFar[next])
+            {
+                costSoFar[next] = newCost;
+                var priority = newCost;
+                frontier.Enqueue(next, priority);
+                cameFrom[next] = current;
+            }
+        }
+    }
+
+    // create reverse path
+    current = end;
+    var path = new List<Point>();
+    while (current != start)
+    {
+        path.Add(current);
+        current = cameFrom[current];
+    }
+    path.Add(start);
+    path.Reverse();
+
+    grid.VisitConsole(x => Console.Write((char)(x + '0')));
+
+    ReadKey();
+
+    Clear();
+    grid.VisitConsole((p, x) =>
+    {
+        if (!path.Contains(p))
+        {
+            Write((char)(x + '0'));
+        }
+        else
+        {
+            Write('o', ConsoleColor.Green);
+        }
+    });
+
+    WriteLine(path.Sum(p => p == start ? 0 : grid[p]));
+}
 
 void Day14_Part2()
 {
@@ -1587,6 +1759,8 @@ readonly struct Point
 
     public static Point operator +(in Point p1, in Point p2) => p1.Add(p2);
     public static Point operator -(in Point p1, in Point p2) => p1.Subtract(p2);
+    public static bool operator ==(in Point p1, in Point p2) => p1.X == p2.X && p1.Y == p2.Y;
+    public static bool operator !=(in Point p1, in Point p2) => p1.X != p2.X || p1.Y != p2.Y;
 
     public Point Add(in Point other) => new(X + other.X, Y + other.Y);
     public Point Subtract(in Point other) => new(X - other.X, Y - other.Y);
@@ -1597,13 +1771,39 @@ readonly struct Point
         y = Y;
     }
 
+    public IEnumerable<Point> Neighbors()
+    {
+        yield return Up;
+        yield return Left;
+        yield return Down;
+        yield return Right;
+    }
+
+    public IEnumerable<Point> Neighbors(IGrid grid)
+    {
+        if (grid.Contains(Up))
+            yield return Up;
+        if (grid.Contains(Left))
+            yield return Left;
+        if (grid.Contains(Down))
+            yield return Down;
+        if (grid.Contains(Right))
+            yield return Right;
+    }
+
+
     public override string ToString() => $"({X},{Y})";
+}
+
+interface IGrid
+{
+    bool Contains(Point p);
 }
 
 /// <summary>
 /// Represents a grid where values are organized in multiple rows in vertical order from top to bottom, and where each row is constituted of values ordered from left to right.
 /// </summary>
-class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
+class Grid<T> : IGrid, IEnumerable<(Point point, T value)> where T : struct
 {
     private readonly T[] _data;
     private readonly T? _outOfBoundsValue;
@@ -1723,6 +1923,12 @@ class Grid<T> : IEnumerable<(Point point, T value)> where T : struct
     /// Calls <see cref="Console.WriteLine"/> at the end of each row.
     /// </summary>
     public void VisitConsole(Action<T> visit) => Visit(visit, () => WriteLine());
+
+    /// <summary>
+    /// Visit each value in grid order (left to right then top to bottom) and call the <paramref name="visit"/>.
+    /// Calls <see cref="Console.WriteLine"/> at the end of each row.
+    /// </summary>
+    public void VisitConsole(Action<Point, T> visit) => Visit(visit, () => WriteLine());
 
     public void Visit(Action<T> visit, Action? endOfRow = null)
     {
