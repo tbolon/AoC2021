@@ -6,7 +6,7 @@ internal static class Day16
 {
     public static void Part2()
     {
-        var frames = Input.GetLines(16, sample: false).Select(l => l.Chunk(2).Select(c => new string(c)).Select(s => byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray()).ToArray();
+        var frames = ReadInput();
 
         foreach (var frame in frames)
         {
@@ -26,102 +26,44 @@ internal static class Day16
 
     public static void Part1()
     {
-        var frames = Input.GetLines(16, sample: false).Select(l => l.Chunk(2).Select(c => new string(c)).Select(s => byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray()).ToArray();
+        var frames = ReadInput();
 
-        long part1;
         foreach (var frame in frames)
         {
-            part1 = 0;
             foreach (var b in frame)
             {
                 WriteBinary(b, 8);
             }
+
             WriteLine();
 
             var i = 0;
-            var size = frame.Length * 8;
-            while (i < size)
-            {
-                ReadPacket(frame, ref i);
-
-                // ignore end padding
-                if (size - i < 8)
-                {
-                    break;
-                }
-            }
+            var rootPacket = ReadPacket(frame, ref i);
             WriteLine();
-            WriteLine(part1);
-        }
-
-        void ReadPacket(byte[] frame, ref int i)
-        {
-            // version
-            var v = ReadByte(frame, ref i, 3);
-            WriteBinary(v, 3, ConsoleColor.Green);
-            part1 += v;
-
-            // typeID
-            var t = ReadByte(frame, ref i, 3);
-            WriteBinary(t, 3, ConsoleColor.Cyan);
-
-            if (t == 4)
-            {
-                // literal
-                var payloadIndex = i;
-                byte continuation;
-                List<byte> data = new();
-                do
-                {
-                    continuation = ReadByte(frame, ref i, 1);
-                    WriteBinary(continuation, 1, ConsoleColor.Red);
-                    var dataByte = ReadByte(frame, ref i, 4);
-                    WriteBinary(dataByte, 4, ConsoleColor.White);
-                    data.Add(dataByte);
-                }
-                while (continuation != 0);
-            }
-            else
-            {
-                // operator
-                var lengthTypeID = ReadByte(frame, ref i, 1);
-                WriteBinary(lengthTypeID, 1, ConsoleColor.Yellow);
-                if (lengthTypeID == 0)
-                {
-                    // total length
-                    var len = ReadInt16(frame, ref i, 15);
-                    WriteBinary(len, 15, ConsoleColor.Magenta);
-                    var stop = i + len;
-                    while (i < stop)
-                    {
-                        ReadPacket(frame, ref i);
-                    }
-                }
-                else
-                {
-                    // number of packets
-                    var count = ReadInt16(frame, ref i, 11);
-                    WriteBinary(count, 11, ConsoleColor.Blue);
-                    for (int x = 0; x < count; x++)
-                    {
-                        ReadPacket(frame, ref i);
-                    }
-                }
-            }
+            WriteLine(rootPacket.Version);
         }
     }
+
+    private static byte[][] ReadInput(bool sample = false) => Input
+        .GetLines(16, sample)
+        .Select(l => l
+            .Chunk(2)
+            .Select(c => new string(c))
+            .Select(s => byte.Parse(s, System.Globalization.NumberStyles.HexNumber))
+            .ToArray())
+        .ToArray();
 
     private static IPacket ReadPacket(byte[] frame, ref int i)
     {
         // version
-        var v = ReadByte(frame, ref i, 3);
-        WriteBinary(v, 3, ConsoleColor.Green);
+        var version = ReadByte(frame, ref i, 3);
+        WriteBinary(version, 3, ConsoleColor.Green);
 
         // typeID
-        var t = ReadByte(frame, ref i, 3);
-        WriteBinary(t, 3, ConsoleColor.Cyan);
+        var typeID = ReadByte(frame, ref i, 3);
+        WriteBinary(typeID, 3, ConsoleColor.Cyan);
 
-        if (t == 4)
+        if (typeID == 4)
         {
             // literal
             byte continuation;
@@ -137,7 +79,7 @@ internal static class Day16
             }
             while (continuation != 0);
 
-            return new LiteralPacket(value);
+            return new LiteralPacket(version, value);
         }
         else
         {
@@ -169,7 +111,7 @@ internal static class Day16
                 }
             }
 
-            return new OperationPacket((OperationPacketType)t, packets);
+            return new OperationPacket(version, (OperationPacketType)typeID, packets);
         }
     }
 
@@ -178,8 +120,7 @@ internal static class Day16
         while (size > 0)
         {
             var bit = (value >> (size - 1)) & 0x1;
-            if (bit == 1) Write('1', color);
-            else Write('0', color);
+            Write(bit == 1 ? '1' : '0', color);
             size--;
         }
     }
@@ -242,6 +183,8 @@ internal static class Day16
 
     interface IPacket
     {
+        int Version { get; }
+
         long Solve();
     }
 
@@ -249,12 +192,16 @@ internal static class Day16
     {
         private readonly OperationPacketType type;
         private readonly List<IPacket> args;
+        private readonly int version;
 
-        public OperationPacket(OperationPacketType type, List<IPacket> args)
+        public OperationPacket(int version, OperationPacketType type, List<IPacket> args)
         {
+            this.version = version;
             this.type = type;
             this.args = args;
         }
+
+        public int Version => version + args.Sum(a => a.Version);
 
         public long Solve() => type switch
         {
@@ -273,10 +220,13 @@ internal static class Day16
     {
         private readonly long value;
 
-        public LiteralPacket(long value)
+        public LiteralPacket(int version, long value)
         {
+            Version = version;
             this.value = value;
         }
+
+        public int Version { get; }
 
         public long Solve() => value;
     }
