@@ -1,8 +1,305 @@
 ﻿using static ProgramHelper;
 
-Day15_Part2();
+Day16_Part2();
 
 #pragma warning disable CS8321
+
+void Day16_Part2()
+{
+    var frames = Input.GetLines(16, sample: false).Select(l => l.Chunk(2).Select(c => new string(c)).Select(s => byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray()).ToArray();
+
+    foreach (var frame in frames)
+    {
+        foreach (var b in frame)
+        {
+            WriteBinary(b, 8);
+        }
+
+        WriteLine();
+
+        var i = 0;
+        var size = frame.Length * 8;
+        var rootPacket = ReadPacket(frame, ref i);
+        WriteLine();
+        WriteLine(rootPacket.Solve());
+    }
+
+    AoC2021.Day16.IPacket ReadPacket(byte[] frame, ref int i)
+    {
+        // version
+        var v = ReadByte(frame, ref i, 3);
+        WriteBinary(v, 3, ConsoleColor.Green);
+
+        // typeID
+        var t = ReadByte(frame, ref i, 3);
+        WriteBinary(t, 3, ConsoleColor.Cyan);
+
+        if (t == 4)
+        {
+            // literal
+            var payloadIndex = i;
+            byte continuation;
+            long value = 0;
+            do
+            {
+                continuation = ReadByte(frame, ref i, 1);
+                WriteBinary(continuation, 1, ConsoleColor.Red);
+                var dataByte = ReadByte(frame, ref i, 4);
+                WriteBinary(dataByte, 4, ConsoleColor.White);
+                value <<= 4;
+                value |= dataByte;
+            }
+            while (continuation != 0);
+
+            return new AoC2021.Day16.LiteralPacket(value);
+        }
+        else
+        {
+            // operator
+            var lengthTypeID = ReadByte(frame, ref i, 1);
+            WriteBinary(lengthTypeID, 1, ConsoleColor.Yellow);
+
+            var packets = new List<AoC2021.Day16.IPacket>();
+
+            if (lengthTypeID == 0)
+            {
+                // total length
+                var len = ReadInt16(frame, ref i, 15);
+                WriteBinary(len, 15, ConsoleColor.Magenta);
+                var stop = i + len;
+                while (i < stop)
+                {
+                    packets.Add(ReadPacket(frame, ref i));
+                }
+            }
+            else
+            {
+                // number of packets
+                var count = ReadInt16(frame, ref i, 11);
+                WriteBinary(count, 11, ConsoleColor.Blue);
+                for (int x = 0; x < count; x++)
+                {
+                    packets.Add(ReadPacket(frame, ref i));
+                }
+            }
+
+            return new AoC2021.Day16.OperationPacked((AoC2021.Day16.OperationPacketType)t, packets);
+        }
+    }
+
+    void WriteBinary(int value, int size, ConsoleColor? color = null)
+    {
+        while (size > 0)
+        {
+            var bit = (value >> (size - 1)) & 0x1;
+            if (bit == 1) Write('1', color);
+            else Write('0', color);
+            size--;
+        }
+    }
+
+    byte ReadByte(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 8);
+        byte final = 0;
+        while (size >= 1)
+        {
+            var bit = BitAt(i, frame);
+            final |= (byte)(bit << (size - 1));
+            size--;
+            i++;
+        }
+        return final;
+    }
+
+    short ReadInt16(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 16);
+        short final = 0;
+        while (size >= 1)
+        {
+            final |= (short)(BitAt(i, frame) << (size - 1));
+            size--;
+            i++;
+        }
+
+        return final;
+    }
+
+    byte BitAt(int position, params byte[] frame)
+    {
+        var byteIndex = position / 8;
+        var byteValue = frame[byteIndex];
+        var shift = position % 8;
+        var mask = (byte)(128 >> shift);
+        var bitValue = (byte)(byteValue & mask) != 0 ? (byte)1 : (byte)0;
+        return bitValue;
+    }
+}
+
+void Day16()
+{
+    var frames = Input.GetLines(16, sample: false).Select(l => l.Chunk(2).Select(c => new string(c)).Select(s => byte.Parse(s, System.Globalization.NumberStyles.HexNumber)).ToArray()).ToArray();
+
+    long part1;
+    foreach (var frame in frames)
+    {
+        part1 = 0;
+        foreach (var b in frame)
+        {
+            WriteData(b, 8);
+        }
+        WriteLine();
+
+        var i = 0;
+        var size = frame.Length * 8;
+        while (i < size)
+        {
+            ReadPacket(frame, ref i);
+
+            // ignore end padding
+            if (size - i < 8)
+            {
+                break;
+            }
+        }
+        WriteLine();
+        WriteLine(part1);
+    }
+
+    void ReadPacket(byte[] frame, ref int i)
+    {
+        // version
+        var v = ReadByte(frame, ref i, 3);
+        WriteData(v, 3, ConsoleColor.Green);
+        part1 += v;
+
+        // typeID
+        var t = ReadByte(frame, ref i, 3);
+        WriteData(t, 3, ConsoleColor.Cyan);
+
+        if (t == 4)
+        {
+            // literal
+            var payloadIndex = i;
+            byte continuation;
+            List<byte> data = new();
+            do
+            {
+                continuation = ReadByte(frame, ref i, 1);
+                WriteData(continuation, 1, ConsoleColor.Red);
+                var dataByte = ReadByte(frame, ref i, 4);
+                WriteData(dataByte, 4, ConsoleColor.White);
+                data.Add(dataByte);
+            }
+            while (continuation != 0);
+        }
+        else
+        {
+            // operator
+            var lengthTypeID = ReadByte(frame, ref i, 1);
+            WriteData(lengthTypeID, 1, ConsoleColor.Yellow);
+            if (lengthTypeID == 0)
+            {
+                // total length
+                var len = ReadInt16(frame, ref i, 15);
+                WriteData(len, 15, ConsoleColor.Magenta);
+                var stop = i + len;
+                while (i < stop)
+                {
+                    ReadPacket(frame, ref i);
+                }
+            }
+            else
+            {
+                // number of packets
+                var count = ReadInt16(frame, ref i, 11);
+                WriteData(count, 11, ConsoleColor.Blue);
+                for (int x = 0; x < count; x++)
+                {
+                    ReadPacket(frame, ref i);
+                }
+            }
+        }
+    }
+
+    void WriteData(int value, int size, ConsoleColor? color = null)
+    {
+        while (size > 0)
+        {
+            var bit = (value >> (size - 1)) & 0x1;
+            if (bit == 1) Write('1', color);
+            else Write('0', color);
+            size--;
+        }
+    }
+
+    byte ReadByte(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 8);
+        byte final = 0;
+        while (size >= 1)
+        {
+            var bit = BitAt(i, frame);
+            final |= (byte)(bit << (size - 1));
+            size--;
+            i++;
+        }
+        return final;
+    }
+
+    short ReadInt16(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 16);
+        short final = 0;
+        while (size >= 1)
+        {
+            final |= (short)(BitAt(i, frame) << (size - 1));
+            size--;
+            i++;
+        }
+
+        return final;
+    }
+
+    int ReadInt32(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 32);
+        int final = 0;
+        while (size >= 1)
+        {
+            final |= BitAt(i, frame) << (size - 1);
+            size--;
+            i++;
+        }
+
+        return final;
+    }
+
+    long ReadInt64(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 64);
+        long final = 0;
+        while (size >= 1)
+        {
+            final |= (long)BitAt(i, frame) << (size - 1);
+            size--;
+            i++;
+        }
+
+        return final;
+    }
+
+    byte BitAt(int position, params byte[] frame)
+    {
+        var byteIndex = position / 8;
+        var byteValue = frame[byteIndex];
+        var shift = position % 8;
+        var mask = (byte)(128 >> shift);
+        var bitValue = (byte)(byteValue & mask) != 0 ? (byte)1 : (byte)0;
+        return bitValue;
+    }
+}
 
 void Day15_Part2()
 {
