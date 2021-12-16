@@ -83,7 +83,7 @@ internal static class Day16
                     }
                 }
 
-                return new OperationPacked((OperationPacketType)t, packets);
+                return new OperationPacket((OperationPacketType)t, packets);
             }
         }
 
@@ -296,31 +296,28 @@ internal static class Day16
         long Solve();
     }
 
-    class OperationPacked : IPacket
+    class OperationPacket : IPacket
     {
         private readonly OperationPacketType type;
         private readonly List<IPacket> args;
 
-        public OperationPacked(OperationPacketType type, List<IPacket> args)
+        public OperationPacket(OperationPacketType type, List<IPacket> args)
         {
             this.type = type;
             this.args = args;
         }
 
-        public long Solve()
+        public long Solve() => type switch
         {
-            return type switch
-            {
-                OperationPacketType.Sum => args.Sum(p => p.Solve()),
-                OperationPacketType.Product => args.Aggregate(1L, (cumul, p) => cumul * p.Solve()),
-                OperationPacketType.Minimum => args.Min(p => p.Solve()),
-                OperationPacketType.Maximum => args.Max(p => p.Solve()),
-                OperationPacketType.GreatherThan => args[0].Solve() > args[1].Solve() ? 1 : 0L,
-                OperationPacketType.LowerThan => args[0].Solve() < args[1].Solve() ? 1 : 0L,
-                OperationPacketType.EqualsTo => args[0].Solve() == args[1].Solve() ? 1 : 0L,
-                _ => throw new NotImplementedException(),
-            };
-        }
+            OperationPacketType.Sum => args.Sum(p => p.Solve()),
+            OperationPacketType.Product => args.Aggregate(1L, (cumul, p) => cumul * p.Solve()),
+            OperationPacketType.Minimum => args.Min(p => p.Solve()),
+            OperationPacketType.Maximum => args.Max(p => p.Solve()),
+            OperationPacketType.GreatherThan => args[0].Solve() > args[1].Solve() ? 1 : 0L,
+            OperationPacketType.LowerThan => args[0].Solve() < args[1].Solve() ? 1 : 0L,
+            OperationPacketType.EqualsTo => args[0].Solve() == args[1].Solve() ? 1 : 0L,
+            _ => throw new NotImplementedException(),
+        };
     }
 
     class LiteralPacket : IPacket

@@ -7,7 +7,6 @@ interface IGrid
     bool Contains(Point p);
 }
 
-
 /// <summary>
 /// Represents a grid where values are organized in multiple rows in vertical order from top to bottom, and where each row is constituted of values ordered from left to right.
 /// </summary>
