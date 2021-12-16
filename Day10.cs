@@ -93,35 +93,35 @@ internal static class Day10
         }
 
         WriteLine(count[')'] * 3 + count[']'] * 57 + count['}'] * 1197 + count['>'] * 25137);
+    }
 
-        static char ExamLine(string line)
+    private static char ExamLine(string line)
+    {
+        var stack = new Stack<char>();
+
+        foreach (var c in line)
         {
-            var stack = new Stack<char>();
-
-            foreach (var c in line)
+            if (c == '(' || c == '[' || c == '{' || c == '<')
             {
-                if (c == '(' || c == '[' || c == '{' || c == '<')
-                {
-                    stack.Push(c);
-                    continue;
-                }
-
-                var c2 = stack.Peek();
-
-                if (c == ')' && c2 != '(')
-                    return c;
-                else if (c == ']' && c2 != '[')
-                    return c;
-                else if (c == '}' && c2 != '{')
-                    return c;
-                else if (c == '>' && c2 != '<')
-                    return c;
-
-                stack.Pop();
+                stack.Push(c);
+                continue;
             }
 
-            return '\0';
+            var c2 = stack.Peek();
+
+            if (c == ')' && c2 != '(')
+                return c;
+            else if (c == ']' && c2 != '[')
+                return c;
+            else if (c == '}' && c2 != '{')
+                return c;
+            else if (c == '>' && c2 != '<')
+                return c;
+
+            stack.Pop();
         }
+
+        return '\0';
     }
 
     internal class Cave

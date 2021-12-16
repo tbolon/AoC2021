@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a point in a space where X move from left to right and Y move from top to bottom.
 /// </summary>
-readonly struct Point
+internal readonly struct Point
 {
     public static readonly Point Empty = new(0, 0);
 

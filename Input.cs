@@ -1,9 +1,4 @@
-﻿
-#pragma warning disable CS8321
-
-
-
-/// <summary>
+﻿/// <summary>
 /// Helper for puzzle input.
 /// </summary>
 static class Input

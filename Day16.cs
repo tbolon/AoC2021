@@ -18,123 +18,9 @@ internal static class Day16
             WriteLine();
 
             var i = 0;
-            var size = frame.Length * 8;
             var rootPacket = ReadPacket(frame, ref i);
             WriteLine();
             WriteLine(rootPacket.Solve());
-        }
-
-        IPacket ReadPacket(byte[] frame, ref int i)
-        {
-            // version
-            var v = ReadByte(frame, ref i, 3);
-            WriteBinary(v, 3, ConsoleColor.Green);
-
-            // typeID
-            var t = ReadByte(frame, ref i, 3);
-            WriteBinary(t, 3, ConsoleColor.Cyan);
-
-            if (t == 4)
-            {
-                // literal
-                var payloadIndex = i;
-                byte continuation;
-                long value = 0;
-                do
-                {
-                    continuation = ReadByte(frame, ref i, 1);
-                    WriteBinary(continuation, 1, ConsoleColor.Red);
-                    var dataByte = ReadByte(frame, ref i, 4);
-                    WriteBinary(dataByte, 4, ConsoleColor.White);
-                    value <<= 4;
-                    value |= dataByte;
-                }
-                while (continuation != 0);
-
-                return new LiteralPacket(value);
-            }
-            else
-            {
-                // operator
-                var lengthTypeID = ReadByte(frame, ref i, 1);
-                WriteBinary(lengthTypeID, 1, ConsoleColor.Yellow);
-
-                var packets = new List<IPacket>();
-
-                if (lengthTypeID == 0)
-                {
-                    // total length
-                    var len = ReadInt16(frame, ref i, 15);
-                    WriteBinary(len, 15, ConsoleColor.Magenta);
-                    var stop = i + len;
-                    while (i < stop)
-                    {
-                        packets.Add(ReadPacket(frame, ref i));
-                    }
-                }
-                else
-                {
-                    // number of packets
-                    var count = ReadInt16(frame, ref i, 11);
-                    WriteBinary(count, 11, ConsoleColor.Blue);
-                    for (int x = 0; x < count; x++)
-                    {
-                        packets.Add(ReadPacket(frame, ref i));
-                    }
-                }
-
-                return new OperationPacket((OperationPacketType)t, packets);
-            }
-        }
-
-        void WriteBinary(int value, int size, ConsoleColor? color = null)
-        {
-            while (size > 0)
-            {
-                var bit = (value >> (size - 1)) & 0x1;
-                if (bit == 1) Write('1', color);
-                else Write('0', color);
-                size--;
-            }
-        }
-
-        byte ReadByte(byte[] frame, ref int i, byte size)
-        {
-            Assert(size <= 8);
-            byte final = 0;
-            while (size >= 1)
-            {
-                var bit = BitAt(i, frame);
-                final |= (byte)(bit << (size - 1));
-                size--;
-                i++;
-            }
-            return final;
-        }
-
-        short ReadInt16(byte[] frame, ref int i, byte size)
-        {
-            Assert(size <= 16);
-            short final = 0;
-            while (size >= 1)
-            {
-                final |= (short)(BitAt(i, frame) << (size - 1));
-                size--;
-                i++;
-            }
-
-            return final;
-        }
-
-        byte BitAt(int position, params byte[] frame)
-        {
-            var byteIndex = position / 8;
-            var byteValue = frame[byteIndex];
-            var shift = position % 8;
-            var mask = (byte)(128 >> shift);
-            var bitValue = (byte)(byteValue & mask) != 0 ? (byte)1 : (byte)0;
-            return bitValue;
-
         }
     }
 
@@ -148,7 +34,7 @@ internal static class Day16
             part1 = 0;
             foreach (var b in frame)
             {
-                WriteData(b, 8);
+                WriteBinary(b, 8);
             }
             WriteLine();
 
@@ -172,12 +58,12 @@ internal static class Day16
         {
             // version
             var v = ReadByte(frame, ref i, 3);
-            WriteData(v, 3, ConsoleColor.Green);
+            WriteBinary(v, 3, ConsoleColor.Green);
             part1 += v;
 
             // typeID
             var t = ReadByte(frame, ref i, 3);
-            WriteData(t, 3, ConsoleColor.Cyan);
+            WriteBinary(t, 3, ConsoleColor.Cyan);
 
             if (t == 4)
             {
@@ -188,9 +74,9 @@ internal static class Day16
                 do
                 {
                     continuation = ReadByte(frame, ref i, 1);
-                    WriteData(continuation, 1, ConsoleColor.Red);
+                    WriteBinary(continuation, 1, ConsoleColor.Red);
                     var dataByte = ReadByte(frame, ref i, 4);
-                    WriteData(dataByte, 4, ConsoleColor.White);
+                    WriteBinary(dataByte, 4, ConsoleColor.White);
                     data.Add(dataByte);
                 }
                 while (continuation != 0);
@@ -199,12 +85,12 @@ internal static class Day16
             {
                 // operator
                 var lengthTypeID = ReadByte(frame, ref i, 1);
-                WriteData(lengthTypeID, 1, ConsoleColor.Yellow);
+                WriteBinary(lengthTypeID, 1, ConsoleColor.Yellow);
                 if (lengthTypeID == 0)
                 {
                     // total length
                     var len = ReadInt16(frame, ref i, 15);
-                    WriteData(len, 15, ConsoleColor.Magenta);
+                    WriteBinary(len, 15, ConsoleColor.Magenta);
                     var stop = i + len;
                     while (i < stop)
                     {
@@ -215,7 +101,7 @@ internal static class Day16
                 {
                     // number of packets
                     var count = ReadInt16(frame, ref i, 11);
-                    WriteData(count, 11, ConsoleColor.Blue);
+                    WriteBinary(count, 11, ConsoleColor.Blue);
                     for (int x = 0; x < count; x++)
                     {
                         ReadPacket(frame, ref i);
@@ -223,55 +109,118 @@ internal static class Day16
                 }
             }
         }
+    }
 
-        void WriteData(int value, int size, ConsoleColor? color = null)
+    private static IPacket ReadPacket(byte[] frame, ref int i)
+    {
+        // version
+        var v = ReadByte(frame, ref i, 3);
+        WriteBinary(v, 3, ConsoleColor.Green);
+
+        // typeID
+        var t = ReadByte(frame, ref i, 3);
+        WriteBinary(t, 3, ConsoleColor.Cyan);
+
+        if (t == 4)
         {
-            while (size > 0)
+            // literal
+            byte continuation;
+            long value = 0;
+            do
             {
-                var bit = (value >> (size - 1)) & 0x1;
-                if (bit == 1) Write('1', color);
-                else Write('0', color);
-                size--;
+                continuation = ReadByte(frame, ref i, 1);
+                WriteBinary(continuation, 1, ConsoleColor.Red);
+                var dataByte = ReadByte(frame, ref i, 4);
+                WriteBinary(dataByte, 4, ConsoleColor.White);
+                value <<= 4;
+                value |= dataByte;
             }
-        }
+            while (continuation != 0);
 
-        byte ReadByte(byte[] frame, ref int i, byte size)
+            return new LiteralPacket(value);
+        }
+        else
         {
-            Assert(size <= 8);
-            byte final = 0;
-            while (size >= 1)
+            // operator
+            var lengthTypeID = ReadByte(frame, ref i, 1);
+            WriteBinary(lengthTypeID, 1, ConsoleColor.Yellow);
+
+            var packets = new List<IPacket>();
+
+            if (lengthTypeID == 0)
             {
-                var bit = BitAt(i, frame);
-                final |= (byte)(bit << (size - 1));
-                size--;
-                i++;
+                // total length
+                var len = ReadInt16(frame, ref i, 15);
+                WriteBinary(len, 15, ConsoleColor.Magenta);
+                var stop = i + len;
+                while (i < stop)
+                {
+                    packets.Add(ReadPacket(frame, ref i));
+                }
             }
-            return final;
-        }
-
-        short ReadInt16(byte[] frame, ref int i, byte size)
-        {
-            Assert(size <= 16);
-            short final = 0;
-            while (size >= 1)
+            else
             {
-                final |= (short)(BitAt(i, frame) << (size - 1));
-                size--;
-                i++;
+                // number of packets
+                var count = ReadInt16(frame, ref i, 11);
+                WriteBinary(count, 11, ConsoleColor.Blue);
+                for (int x = 0; x < count; x++)
+                {
+                    packets.Add(ReadPacket(frame, ref i));
+                }
             }
 
-            return final;
+            return new OperationPacket((OperationPacketType)t, packets);
+        }
+    }
+
+    static void WriteBinary(int value, int size, ConsoleColor? color = null)
+    {
+        while (size > 0)
+        {
+            var bit = (value >> (size - 1)) & 0x1;
+            if (bit == 1) Write('1', color);
+            else Write('0', color);
+            size--;
+        }
+    }
+
+    static byte ReadByte(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 8);
+        byte final = 0;
+        while (size >= 1)
+        {
+            var bit = BitAt(i, frame);
+            final |= (byte)(bit << (size - 1));
+            size--;
+            i++;
+        }
+        return final;
+    }
+
+    static short ReadInt16(byte[] frame, ref int i, byte size)
+    {
+        Assert(size <= 16);
+        short final = 0;
+        while (size >= 1)
+        {
+            final |= (short)(BitAt(i, frame) << (size - 1));
+            size--;
+            i++;
         }
 
-        byte BitAt(int position, params byte[] frame)
-        {
-            var byteIndex = position / 8;
-            var byteValue = frame[byteIndex];
-            var shift = position % 8;
-            var mask = (byte)(128 >> shift);
-            var bitValue = (byte)(byteValue & mask) != 0 ? (byte)1 : (byte)0;
-            return bitValue;
-        }
+        return final;
+    }
+
+    static byte BitAt(int position, params byte[] frame)
+    {
+        var byteIndex = position / 8;
+        var byteValue = frame[byteIndex];
+        var shift = position % 8;
+        var mask = (byte)(128 >> shift);
+        var bitValue = (byte)(byteValue & mask) != 0 ? (byte)1 : (byte)0;
+        return bitValue;
+
     }
 
     enum OperationPacketType

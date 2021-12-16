@@ -53,32 +53,6 @@ internal static class Day13
         }
 
         DrawGrid(grid);
-
-        static void DrawGrid(Grid<bool> grid, bool? vertical = null, int coordinate = 0)
-        {
-            Clear();
-            grid.VisitConsole(x => Write(x ? '#' : '.'));
-            if (vertical != null)
-            {
-                if (vertical == true)
-                {
-                    for (int y = 0; y < grid.Height; y++)
-                    {
-                        SetCursorPosition(coordinate, y);
-                        Write('|');
-                    }
-                }
-                else
-                {
-                    for (int x = 0; x < grid.Width; x++)
-                    {
-                        SetCursorPosition(x, coordinate);
-                        Write('-');
-                    }
-
-                }
-            }
-        }
     }
 
     public static void Part1()
@@ -130,5 +104,31 @@ internal static class Day13
         }
 
         WriteLine(grid.Sum(x => x.value ? 1 : 0));
+    }
+
+    static void DrawGrid(Grid<bool> grid, bool? vertical = null, int coordinate = 0)
+    {
+        Clear();
+        grid.VisitConsole(x => Write(x ? '#' : '.'));
+        if (vertical != null)
+        {
+            if (vertical == true)
+            {
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    SetCursorPosition(coordinate, y);
+                    Write('|');
+                }
+            }
+            else
+            {
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    SetCursorPosition(x, coordinate);
+                    Write('-');
+                }
+
+            }
+        }
     }
 }

@@ -25,22 +25,11 @@ internal static class Day09
         int[] sizes = new int[points.Count];
         for (int i = 0; i < points.Count; i++)
         {
-            sizes[i] = Visit(points[i]);
+            sizes[i] = Visit(points[i], fill);
         }
 
         // calcul du produit des 3 plus grandes
         WriteLine(sizes.OrderByDescending(s => s).Take(3).Aggregate(1, (agg, current) => agg * current));
-
-        // examine une case et démarre l'examen de ses voisines
-        int Visit(Point point)
-        {
-            if (!fill.Contains(point) || fill[point] != 0)
-                return 0; // out of bounds or already visited
-
-            fill[point] = 1; // marquée comme visitée
-
-            return 1 + Visit(point.Left) + Visit(point.Right) + Visit(point.Up) + Visit(point.Down);
-        }
     }
 
     public static void Part1()
@@ -61,5 +50,15 @@ internal static class Day09
         });
 
         WriteLine(score);
+    }
+
+    private static int Visit(Point point, Grid<int> fill)
+    {
+        if (!fill.Contains(point) || fill[point] != 0)
+            return 0; // out of bounds or already visited
+
+        fill[point] = 1; // marquée comme visitée
+
+        return 1 + Visit(point.Left, fill) + Visit(point.Right, fill) + Visit(point.Up, fill) + Visit(point.Down, fill);
     }
 }
